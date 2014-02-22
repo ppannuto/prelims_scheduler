@@ -1,45 +1,6 @@
-
-# import getpass
-# # import gdata.docs.service
-# import gdata.spreadsheet.service
-
-# # client = gdata.docs.service.DocsService()
-# print "please enter your Google Apps password: "
-# client.ClientLogin('jabernet@umich.edu',getpass.getpass())
-
-# documents_feed = client.GetDocumentListFeed()
-# for document_entry in documents_feed.entry:
-#   # Display the title of the document on the command line.
-#   print document_entry.title.text
-
-# Useful page: http://www.payne.org/index.php/Reading_Google_Spreadsheets_in_Python
-
-# gdc = gdata.spreadsheet.service.SpreadsheetsService()
-# gdc.password = getpass.getpass()
-# gdc.email = 'jakeyboy@gmail.com'
-# gdc.ProgrammaticLogin()
-# fee = gdc.GetSpreadsheetsFeed()
-# q = gdata.spreadsheet.service.DocumentQuery()
-# q['title'] = 'Faculty Visit Day Availability'
-# q['title-exact'] = 'true'
-# feed = gdc.GetSpreadsheetsFeed(query=q)
-# spid = feed.entry[0].id.text.rsplit('/',1)[1]
-# feed = gdc.GetWorksheetsFeed(spid)
-# woid = feed.entry[0].id.text.rsplit('/',1)[1]
-# rows = gdc.GetListFeed(spid,woid).entry
-
-# for row in rows:
-#         for key in row.custom:
-#                 print " %s: %s" % (key, row.custom[key].text)
-# print "\n"
-
-# gc = gspread.login('jakeyboy@gmail.com', getpass.getpass())
-
-# sht = gc.open_by_url('https://docs.google.com/a/umich.edu/spreadsheet/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE')
-
 import get_data_from_google as gdg 
 
-[fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
+
 
 def greedy_assignment():
 	assmnts = {}
@@ -59,7 +20,7 @@ def greedy_assignment():
 
 	def assign(stud,fac):
 		# tries to assign the student to one of the faculty slots
-		# returns success and the slot that was found
+		# if possible, returns success=True and the slot that was found
 		success = False		
 		for slot in slots:
 			# Check necessary conditions if we can assign this student to this fac member
@@ -75,7 +36,7 @@ def greedy_assignment():
 
 	notdone = True
 	while notdone: 
-		# we loop until we were unable to fill any slots
+		# we loop until we were unable to fill any slots for any student
 		notdone = False
 		
 		for stud in students:
@@ -92,9 +53,16 @@ def greedy_assignment():
 
 	return assmnts
 
-assmnts = greedy_assignment()
 
-gdg.upload_assignments(assmnts,slots)
+if __name__ == '__main__':
+	# Get the faculty availability and student ranking data from google
+	[fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
+
+	# Do the greedy assignment
+	assmnts = greedy_assignment()
+	
+	# Upload the results to google
+	gdg.upload_assignments(assmnts,slots)
 
 
 

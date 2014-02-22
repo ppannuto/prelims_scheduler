@@ -1,3 +1,5 @@
+# This is some code for randomly creating a dataset
+# I'm not going to clean it up because we're probably only going to use it a couple times
 import numpy as np
 import random
 

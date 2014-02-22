@@ -3,19 +3,26 @@ import gspread
 import getpass
 
 _pw = getpass.getpass()
+GEMAIL = 'jakeyboy@gmail.com'
+SSHT_URL = 'https://docs.google.com/a/umich.edu/spreadsheet/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE'
+FAC_NAME_HEAD = 'fac_name'
+STUD_NAME_HEAD = 'student_name'
+RANK_NUM = 5
 
 def login_and_get_ss():
+	# Login and return the spreadsheet of interest
 	gc = gspread.login('jakeyboy@gmail.com', _pw)
-	spsht = gc.open_by_url('https://docs.google.com/a/umich.edu/spreadsheet/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE')
+	spsht = gc.open_by_url(SSHT_URL)
 	return spsht
 
 def get_faculty_and_student_data():
+	# Grab the google spreadsheet data and clean up
 	spsht = login_and_get_ss()
 	[facsht,studsht,asssht] = spsht.worksheets()
 	fac_avail = {}
 	slots = None
 	for avail_hash in facsht.get_all_records():
-		fac_name = avail_hash.pop('fac_name')
+		fac_name = avail_hash.pop(FAC_NAME_HEAD)
 		if slots is None:
 			slots = avail_hash.keys()
 			slots.sort()
@@ -24,8 +31,8 @@ def get_faculty_and_student_data():
 	student_rankings = {}
 
 	for rank_hash in studsht.get_all_records():
-		student_name = rank_hash.pop('student_name')
-		student_rankings[student_name] = [rank_hash[str(ind)] for ind in [1,2,3,4,5]]
+		student_name = rank_hash.pop(STUD_NAME_HEAD)
+		student_rankings[student_name] = [rank_hash[str(ind)] for ind in range(1,RANK_NUM+1)]
 
 	return [fac_avail, student_rankings, slots]
 
