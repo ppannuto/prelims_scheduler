@@ -1,0 +1,5 @@
+1. First, run
+ python get_data_from_google.py
+
+2. Run 
+ python manage.py 
