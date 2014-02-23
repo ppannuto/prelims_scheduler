@@ -69,7 +69,7 @@ data = {'faculty_names' : faculty,
 import gspread
 import getpass
 
-gc = gspread.login('jakeyboy@gmail.com', getpass.getpass())
+gc = gspread.login('chansoo.eph@gmail.com', getpass.getpass())
 
 spsht = gc.open_by_url('https://docs.google.com/a/umich.edu/spreadsheet/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE')
 

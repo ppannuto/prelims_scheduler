@@ -1,8 +1,65 @@
 import get_data_from_google as gdg 
+from pulp import *
+
+def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
+	facs = fac_avail.keys()
+	stus = student_rankings.keys()
+	prob = LpProblem("Meeting assignment", LpMinimize)
+	lp_assmnts = LpVariable.dicts("Assignment", (facs, stus, slots), 0, 1)
+
+	# objective function
+	rank_weights = [-10, -5, -2, -1, -1]
+
+	tuples = []
+
+	for stu in stus:		
+		for i in xrange(RANK):
+			for slot in slots:
+				tuples.append((lp_assmnts[student_rankings[stu][i]][stu][slot], rank_weights[i]))
+
+	prob += LpAffineExpression(tuples), "preference-weighted"
+
+	# TIme constraint
+	for slot in slots:
+		for fac in facs:
+			if fac_avail[fac][slot]:
+				# faculty meets only one person
+				prob += lpSum([lp_assmnts[fac][stu][slot] for stu in stus]) <= 1, ""
+			else:
+				# faculty is busy
+				prob += lpSum([lp_assmnts[fac][stu][slot] for stu in stus]) <= 0, ""
+		for stu in stus:
+			# each students meets only one faculty per slot
+			prob += lpSum([lp_assmnts[facc][stu][slot] for facc in facs]) <= 1, ""
+
+	# no student wants to meet the same person twice
+	for fac in facs:
+		for stu in stus:
+			prob += lpSum([lp_assmnts[fac][stu][slot] for slot in slots]) <= 1, ""
 
 
+	prob.writeLP('assignment.lp')
+	prob.solve()
+	print LpStatus[prob.status]
+#	prob.roundSolution()
 
-def greedy_assignment():
+	assmnts = {}
+	for fac in facs:
+		assmnts[fac] = {slot : None for slot in slots}
+	 	for slot in slots:
+	 		if fac_avail[fac][slot]:
+		 		assmnts[fac][slot] = "N/A"	 		
+		 		for stu in stus:
+			 		if value(lp_assmnts[fac][stu][slot]) == 1:
+		 				assmnts[fac][slot] = stu
+		 	else:
+		 		assmnts[fac][slot] = "Busy"
+
+
+	return assmnts
+
+    
+def greedy_assignment(fac_avail, student_rankings, slots):
 	assmnts = {}
 	faculty = fac_avail.keys()
 	students = student_rankings.keys()
@@ -25,7 +82,7 @@ def greedy_assignment():
 		for slot in slots:
 			# Check necessary conditions if we can assign this student to this fac member
 			is_fac_avail = fac_avail[fac][slot]
-			is_slot_avail = assmnts[fact][slot] is None 
+			is_slot_avail = assmnts[fac][slot] is None 
 			is_stud_avail = (slot in student_avail[stud])
 			slot = None
 			if is_fac_avail and is_stud_avail and is_slot_avail:
@@ -56,13 +113,33 @@ def greedy_assignment():
 
 if __name__ == '__main__':
 	# Get the faculty availability and student ranking data from google
-	[fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
+	import pickle
+	pkl_file = open('data.pkl', 'rb')
+	fac_avail = pickle.load(pkl_file)
+	student_rankings = pickle.load(pkl_file)
+	slots = pickle.load(pkl_file)
+		# pprint.pprint(data1)
+	# data2 = pickle.load(pkl_file)
+	# pprint.pprint(data2)
+	# # Do the greedy assignment
+	assmnts = lp_assignment(fac_avail, student_rankings, slots)
 
-	# Do the greedy assignment
-	assmnts = greedy_assignment()
+#	print assmnts
+
+	with open('assignment.csv', 'wb') as csvfile:
+		import csv
+		slots.insert(0, 'name')
+		writer = csv.DictWriter(csvfile, slots)
+		writer.writeheader()
+		for fac in fac_avail.keys():
+			row = assmnts[fac]
+			row['name'] = fac
+			writer.writerow(row)
+
+#	print assmnts
 	
-	# Upload the results to google
-	gdg.upload_assignments(assmnts,slots)
+	# # Upload the results to google
+	# gdg.upload_assignments(assmnts,slots)
 
 
 

@@ -2,22 +2,31 @@
 import gspread
 import getpass
 
-_pw = getpass.getpass()
-GEMAIL = 'jakeyboy@gmail.com'
+GEMAIL = 'chansoo.eph'
 SSHT_URL = 'https://docs.google.com/a/umich.edu/spreadsheet/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE'
+DOCID = '0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE'
 FAC_NAME_HEAD = 'fac_name'
 STUD_NAME_HEAD = 'student_name'
 RANK_NUM = 5
 
+def full_login_and_get_ss(docid):
+	_user = raw_input('Account name: ')
+	_pw = getpass.getpass()
+
+	g = gspread.login(_user, _pw)
+	#SSHT_URL = 'https://docs.google.com/a/umich.edu/spsht/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE'
+	spsht = g.open_by_key(docid)
+	return spsht
+
 def login_and_get_ss():
 	# Login and return the spreadsheet of interest
-	gc = gspread.login('jakeyboy@gmail.com', _pw)
+	gc = gspread.login(GEMAIL, _pw)
 	spsht = gc.open_by_url(SSHT_URL)
 	return spsht
 
 def get_faculty_and_student_data():
 	# Grab the google spreadsheet data and clean up
-	spsht = login_and_get_ss()
+	spsht = full_login_and_get_ss(DOCID)
 	[facsht,studsht,asssht] = spsht.worksheets()
 	fac_avail = {}
 	slots = None
@@ -35,6 +44,7 @@ def get_faculty_and_student_data():
 		student_rankings[student_name] = [rank_hash[str(ind)] for ind in range(1,RANK_NUM+1)]
 
 	return [fac_avail, student_rankings, slots]
+
 
 def upload_assignments(assmnts,slots):
 	spsht = login_and_get_ss()
@@ -59,4 +69,17 @@ def upload_assignments(assmnts,slots):
 
 	asssht.update_cells(cells)
 
+def main():
+	[fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
 
+	import pprint, pickle
+	pkl_file = open('data.pkl', 'wb')
+
+	pickle.dump(fac_avail, pkl_file, -1)
+	pickle.dump(student_rankings, pkl_file, -1)
+	pickle.dump(slots, pkl_file, -1)
+	pkl_file.close()
+
+
+if __name__ == '__main__':
+	main()
