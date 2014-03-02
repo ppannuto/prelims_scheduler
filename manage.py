@@ -139,7 +139,8 @@ if __name__ == '__main__':
 #	print assmnts
 	
 	# # Upload the results to google
-	# gdg.upload_assignments(assmnts,slots)
+	print "uploading to google"
+	gdg.upload_assignments(assmnts,slots)
 
 
 

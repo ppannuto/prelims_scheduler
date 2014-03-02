@@ -47,15 +47,16 @@ def get_faculty_and_student_data():
 
 
 def upload_assignments(assmnts,slots):
-	spsht = login_and_get_ss()
+	spsht = full_login_and_get_ss(DOCID)
 	[facsht,studsht,asssht] = spsht.worksheets()
 	faculty = assmnts.keys()
 	faculty.sort()
 	cells = []
 	def lup(row,col,val):
-		cell = asssht.cell(row,col)
-		cell.value = val
-		cells.append(cell)
+		asssht.update_cell(row,col,val)
+		# cell = asssht.cell(row,col)
+		# cell.value = val
+		# cells.append(cell)
 	for sind,slot in enumerate(slots):
 		lup(1,sind+2,slot)
 
@@ -67,10 +68,10 @@ def upload_assignments(assmnts,slots):
 			else: val = ""
 			lup(row,sind+2,val)
 
-	asssht.update_cells(cells)
+	# asssht.update_cells(cells)
 
 def main():
-	[fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
+	[fac_avail, student_rankings, slots] = get_faculty_and_student_data()
 
 	import pprint, pickle
 	pkl_file = open('data.pkl', 'wb')
