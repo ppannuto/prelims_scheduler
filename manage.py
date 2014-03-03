@@ -1,5 +1,8 @@
 import get_data_from_google as gdg 
 from pulp import *
+TOL = 0.0001
+ENSURE_NUM_AVAIL = 1
+MIN_MEETINGS_PER_STUD = 2
 
 def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 	facs = fac_avail.keys()
@@ -8,12 +11,12 @@ def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 	lp_assmnts = LpVariable.dicts("Assignment", (facs, stus, slots), 0, 1)
 
 	# objective function
-	rank_weights = [-10, -5, -2, -1, -1]
+	rank_weights = [-10, -5, -2, -1, -1, -1, -1, -1, -1]
 
 	tuples = []
 
 	for stu in stus:		
-		for i in xrange(RANK):
+		for i in xrange(len(student_rankings[stu])):
 			for slot in slots:
 				tuples.append((lp_assmnts[student_rankings[stu][i]][stu][slot], rank_weights[i]))
 
@@ -37,18 +40,40 @@ def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 		for stu in stus:
 			prob += lpSum([lp_assmnts[fac][stu][slot] for slot in slots]) <= 1, ""
 
+	# every student should meet with at least MIN_MEETINGS_PER_STUD faculty members
+	for stu in stus:
+		prob += lpSum([lp_assmnts[fac][stu][slot] for fac in facs for slot in slots]) >= MIN_MEETINGS_PER_STUD, ""
+
+	# To ensure some flexibility, we ensure that each faculty member has at least some open slots
+	for fac in facs:
+		totslots = sum(fac_avail[fac].values()) - ENSURE_NUM_AVAIL
+		print fac
+		print totslots
+		prob += lpSum([lp_assmnts[fac][stu][slot]
+						for stu in stus
+						for slot in slots]) <= totslots, ""
 
 	prob.writeLP('assignment.lp')
 	prob.solve()
 	print LpStatus[prob.status]
 #	prob.roundSolution()
 
+	# import pdb; pdb.set_trace()
+
+	for v in prob.variables():
+		if v.varValue >= TOL:
+			print "Var %s has val %f" % (v.getName(), v.varValue)
+			if v.varValue < 0.99:
+				print "============================="
+				print "=====FOUND NONINT VALUE======"
+				print "============================="
+
 	assmnts = {}
 	for fac in facs:
 		assmnts[fac] = {slot : None for slot in slots}
 	 	for slot in slots:
 	 		if fac_avail[fac][slot]:
-		 		assmnts[fac][slot] = "N/A"	 		
+		 		assmnts[fac][slot] = ""
 		 		for stu in stus:
 			 		if value(lp_assmnts[fac][stu][slot]) == 1:
 		 				assmnts[fac][slot] = stu
@@ -113,11 +138,12 @@ def greedy_assignment(fac_avail, student_rankings, slots):
 
 if __name__ == '__main__':
 	# Get the faculty availability and student ranking data from google
-	import pickle
-	pkl_file = open('data.pkl', 'rb')
-	fac_avail = pickle.load(pkl_file)
-	student_rankings = pickle.load(pkl_file)
-	slots = pickle.load(pkl_file)
+	# import pickle
+	# pkl_file = open('data.pkl', 'rb')
+	# fac_avail = pickle.load(pkl_file)
+	# student_rankings = pickle.load(pkl_file)
+	# slots = pickle.load(pkl_file)
+	[fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
 		# pprint.pprint(data1)
 	# data2 = pickle.load(pkl_file)
 	# pprint.pprint(data2)
@@ -126,15 +152,17 @@ if __name__ == '__main__':
 
 #	print assmnts
 
-	with open('assignment.csv', 'wb') as csvfile:
-		import csv
-		slots.insert(0, 'name')
-		writer = csv.DictWriter(csvfile, slots)
-		writer.writeheader()
-		for fac in fac_avail.keys():
-			row = assmnts[fac]
-			row['name'] = fac
-			writer.writerow(row)
+	# with open('assignment.csv', 'wb') as csvfile:
+	# 	import csv
+	# 	slots.insert(0, 'name')
+	# 	writer = csv.DictWriter(csvfile, slots)
+	# 	writer.writeheader()
+	# 	for fac in fac_avail.keys():
+	# 		import copy
+
+	# 		row = copy.deepcopy(assmnts[fac])
+	# 		row['name'] = fac
+	# 		writer.writerow(row)
 
 #	print assmnts
 	

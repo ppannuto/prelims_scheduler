@@ -2,16 +2,26 @@
 import gspread
 import getpass
 
-GEMAIL = 'chansoo.eph'
+GEMAIL = 'jakeyboy@gmail.com'
 SSHT_URL = 'https://docs.google.com/a/umich.edu/spreadsheet/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE'
 DOCID = '0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE'
 FAC_NAME_HEAD = 'fac_name'
 STUD_NAME_HEAD = 'student_name'
 RANK_NUM = 5
 
+global _pswd 
+_pswd = None
+
+def getmypass():
+	global _pswd
+	if _pswd is None:
+		_pswd = getpass.getpass()
+	return _pswd
+
 def full_login_and_get_ss(docid):
-	_user = raw_input('Account name: ')
-	_pw = getpass.getpass()
+	# _user = raw_input('Account name: ')
+	_user = 'jakeyboy@gmail.com'
+	_pw = getmypass()
 
 	g = gspread.login(_user, _pw)
 	#SSHT_URL = 'https://docs.google.com/a/umich.edu/spsht/ccc?key=0AsY0MoR7nxqgdEl3RlNlNFhiNGFpY1Mwcm91a05QaVE'
@@ -39,9 +49,13 @@ def get_faculty_and_student_data():
 
 	student_rankings = {}
 
-	for rank_hash in studsht.get_all_records():
+	recs = studsht.get_all_records()
+
+	# import pdb; pdb.set_trace()
+
+	for rank_hash in recs:
 		student_name = rank_hash.pop(STUD_NAME_HEAD)
-		student_rankings[student_name] = [rank_hash[str(ind)] for ind in range(1,RANK_NUM+1)]
+		student_rankings[student_name] = [rank_hash[str(ind)] for ind in range(1,RANK_NUM+1) if rank_hash.get(str(ind))]
 
 	return [fac_avail, student_rankings, slots]
 
