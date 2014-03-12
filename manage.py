@@ -103,7 +103,47 @@ def write_to_csv(assments, fac_avail, slots):
 			row = {slt:assments[fac][slt].replace("Busy","---").split(" <")[0] for slt in slots}
 			row['fac uniqname'] = fac
 			writer.writerow(row)
+
+
+def slot_to_var(slot):
+    return 't' + slot.replace(':','')
+
     
+def clean_assignment(assments, fac_avail, slots, fac_namemap):
+    table_str = ''
+    for slot in slots:
+        table_str += '\\hline ' + slot + ' & ' + '{' + slot_to_var(slot) + '} \\\ ' + '\n'
+
+    template = """\\documentclass{{article}}
+    \\title{{ Meeting schedule }}
+    \\begin{{document}}
+    
+    \\begin{{center}}
+    \\Huge   {facname} \\\\
+    \\huge
+    \\bigskip
+    """
+    template += "\\begin{{tabular}}{{|c|c|}}"
+    template += table_str
+    template += """\\hline
+    \\end{{tabular}}
+    \\end{{center}}
+    \\end{{document}}"""
+
+        
+    st_assments = {}
+    fac_schd = {}
+    for fac in sorted(fac_avail.keys()):
+        info = {'facname': fac_namemap.get(fac, fac)}
+        if fac_namemap.get(fac) is None:
+            print fac
+        for slot in slots:
+            info[slot_to_var(slot)] = assments[fac][slot]
+        with open("facs/" + fac + ".tex", "wb") as text_file:
+            text_file.write(template.format(**info))
+            
+    return (st_assments, fac_schd)
+        
 def greedy_assignment(fac_avail, student_rankings, slots):
 	assmnts = {}
 	faculty = fac_avail.keys()

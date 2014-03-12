@@ -3,6 +3,7 @@ ackerm	Mark S. Ackerman
 austin	Todd  Austin
 baveja	Satinder Singh Baveja
 mibailey	Mike Bailey
+dawnf		Dawn Freysinger
 valeria	Valeria  Bertacco
 blaauw	David Blaauw
 michjc	Michael J. Cafarella
@@ -57,3 +58,6 @@ teneket	Demosthenis  Teneketzis
 ghw	Gregory H. Wakefield
 wellman	Michael  Wellman
 twenisch	Thomas F. Wenisch
+jcpatt		Jessica Patterson
+moultond	Dia Moulton
+reetudas	Reetuparna Das
