@@ -240,6 +240,7 @@ def main():
 
 
 if __name__ == '__main__':
-	get_and_save_all_data()
+	# get_and_save_all_data()
+	pass
 
 
