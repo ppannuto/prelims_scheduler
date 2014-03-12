@@ -94,14 +94,18 @@ def write_to_csv(assments, fac_avail, slots):
 	# writer = csv.writer(open(CSV_FILENAME, 'w'), dialect='excel')
 	# for slot in sorted(slots):
 	# 	writer.writerow
+	import pickle
+	addresses = pickle.load(open('address_data.pkl'))
+	names_map,uniqnames = gdg.read_fac_name_map()
 	with open('assignment.csv', 'wb') as csvfile:
 		import csv
-		myslots = ['fac uniqname'] + slots
+		myslots = ['faculty name', 'office' ] + slots
 		writer = csv.DictWriter(csvfile, myslots)
 		writer.writeheader()
 		for fac in sorted(fac_avail.keys()):
 			row = {slt:assments[fac][slt].replace("Busy","---").split(" <")[0] for slt in slots}
-			row['fac uniqname'] = fac
+			row['faculty name'] = names_map.get(fac)
+			row['office'] = addresses.get(fac)
 			writer.writerow(row)
     
 def greedy_assignment(fac_avail, student_rankings, slots):
