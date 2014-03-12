@@ -12,19 +12,24 @@ def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 
 	# objective function
 	rank_weights = [-10, -5, -2, -1, -1, -1, -1, -1, -1]
+	slot_weights = {}
+	mult = 0.95
+	for ind, slot in enumerate(sorted(slots)):
+		slot_weights[slot] = (mult ** ind) * (1.4 ** (1 - (ind % 2)))
 
 	tuples = []
 
 	for stu in stus:		
 		for i in xrange(len(student_rankings[stu])):
 			for slot in slots:
-				tuples.append((lp_assmnts[student_rankings[stu][i]][stu][slot], rank_weights[i]))
+				tuples.append((lp_assmnts[student_rankings[stu][i]][stu][slot], slot_weights[slot] * rank_weights[i]))
 
 	prob += LpAffineExpression(tuples), "preference-weighted"
 
 	# TIme constraint
 	for slot in slots:
 		for fac in facs:
+			if fac_avail[fac] is None: continue
 			if fac_avail[fac][slot]:
 				# faculty meets only one person
 				prob += lpSum([lp_assmnts[fac][stu][slot] for stu in stus]) <= 1, ""
@@ -47,8 +52,10 @@ def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 	# To ensure some flexibility, we ensure that each faculty member has at least some open slots
 	for fac in facs:
 		totslots = sum(fac_avail[fac].values()) - ENSURE_NUM_AVAIL
-		print fac
-		print totslots
+		if totslots < 2:
+			continue
+		# print fac
+		# print totslots
 		prob += lpSum([lp_assmnts[fac][stu][slot]
 						for stu in stus
 						for slot in slots]) <= totslots, ""
@@ -83,6 +90,19 @@ def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 
 	return assmnts
 
+def write_to_csv(assments, fac_avail, slots):
+	# writer = csv.writer(open(CSV_FILENAME, 'w'), dialect='excel')
+	# for slot in sorted(slots):
+	# 	writer.writerow
+	with open('assignment.csv', 'wb') as csvfile:
+		import csv
+		myslots = ['fac uniqname'] + slots
+		writer = csv.DictWriter(csvfile, myslots)
+		writer.writeheader()
+		for fac in sorted(fac_avail.keys()):
+			row = {slt:assments[fac][slt].replace("Busy","---").split(" <")[0] for slt in slots}
+			row['fac uniqname'] = fac
+			writer.writerow(row)
     
 def greedy_assignment(fac_avail, student_rankings, slots):
 	assmnts = {}
