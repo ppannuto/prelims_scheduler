@@ -112,6 +112,8 @@ def write_to_csv(assments, fac_avail, slots):
 def slot_to_var(slot):
     return 't' + slot.replace(':','')
 
+def stu_to_name(stu):
+    return stu[0:stu.find("<")-1]
     
 def clean_assignment(assments, fac_avail, slots, fac_namemap):
     table_str = ''
@@ -121,10 +123,12 @@ def clean_assignment(assments, fac_avail, slots, fac_namemap):
     template = """\\documentclass{{article}}
     \\title{{ Meeting schedule }}
     \\begin{{document}}
-    
+    \\thispagestyle{{empty}}    
     \\begin{{center}}
     \\Huge   {facname} \\\\
-    \\huge
+    \\Large
+    {address} \\\\
+    \\vspace{{0.4in}}
     \\bigskip
     """
     template += "\\begin{{tabular}}{{|c|c|}}"
@@ -134,19 +138,61 @@ def clean_assignment(assments, fac_avail, slots, fac_namemap):
     \\end{{center}}
     \\end{{document}}"""
 
+    import pickle
+    addresses = pickle.load(open('address_data.pkl'))
         
     st_assments = {}
-    fac_schd = {}
     for fac in sorted(fac_avail.keys()):
-        info = {'facname': fac_namemap.get(fac, fac)}
-        if fac_namemap.get(fac) is None:
-            print fac
+        info = {'facname': fac_namemap.get(fac, fac),
+                'address': addresses.get(fac, '-')}
         for slot in slots:
-            info[slot_to_var(slot)] = assments[fac][slot]
+            stu = assments[fac][slot]
+            info[slot_to_var(slot)] = stu
+            if stu not in st_assments:
+                st_assments[stu] = {}
+            st_assments[stu][slot] = fac
+        towrite = template.format(**info)
+        towrite = towrite.replace("<", "(")
+        towrite = towrite.replace(">", ")")
         with open("facs/" + fac + ".tex", "wb") as text_file:
-            text_file.write(template.format(**info))
+            text_file.write(towrite)
             
-    return (st_assments, fac_schd)
+            
+            
+    # students
+    stu_template = """\\documentclass{{article}}
+    \\title{{ Meeting schedule }}
+    \\begin{{document}}
+    \\thispagestyle{{empty}}    
+    \\begin{{center}}
+    \\Huge   {stuname} \\\\
+    \\Large
+    \\vspace{{0.4in}}
+    \\bigskip
+    """
+    stu_template += "\\begin{{tabular}}{{|c|c|}}"
+    stu_template += table_str
+    stu_template += """\\hline
+    \\end{{tabular}}
+    \\end{{center}}
+    \\end{{document}}"""
+    for stu in sorted(st_assments.keys()):
+        stu_name = stu_to_name(stu)
+        info = {'stuname': stu_name}
+        for slot in slots:
+           fac = st_assments[stu].get(slot, " ")
+           facinfo =            fac_namemap.get(fac, fac)
+           if fac in addresses:
+               facinfo += " (" + addresses[fac] + ")"
+           info[slot_to_var(slot)] = facinfo
+        towrite = stu_template.format(**info)
+        towrite = towrite.replace("<", "(")
+        towrite = towrite.replace(">", ")")
+        towrite = towrite.replace("Beyster Bldg.", "Beyster")
+
+        with open("stus/" + stu_name.replace(" ", "") + ".tex", "wb") as text_file:
+            text_file.write(towrite)
+
         
 def greedy_assignment(fac_avail, student_rankings, slots):
 	assmnts = {}
