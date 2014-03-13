@@ -1,7 +1,7 @@
 import get_data_from_google as gdg 
 from pulp import *
 TOL = 0.0001
-ENSURE_NUM_AVAIL = 1
+ENSURE_NUM_AVAIL = 2
 MIN_MEETINGS_PER_STUD = 2
 
 def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
@@ -15,7 +15,7 @@ def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 	slot_weights = {}
 	mult = 0.95
 	for ind, slot in enumerate(sorted(slots)):
-		slot_weights[slot] = (mult ** ind) * (1.4 ** (1 - (ind % 2)))
+		slot_weights[slot] = (mult ** ind) * (1.7 ** (1 - (ind % 2)))
 
 	tuples = []
 
@@ -253,7 +253,7 @@ if __name__ == '__main__':
 	# fac_avail = pickle.load(pkl_file)
 	# student_rankings = pickle.load(pkl_file)
 	# slots = pickle.load(pkl_file)
-	[fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
+	# [fac_avail, student_rankings, slots] = gdg.get_faculty_and_student_data()
 		# pprint.pprint(data1)
 	# data2 = pickle.load(pkl_file)
 	# pprint.pprint(data2)
