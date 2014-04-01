@@ -1,0 +1,30 @@
+<div id="event_${event.id}">
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <div style="overflow:hidden;">
+        <h2 style="float: left;">${event.name}</h2>
+        <button style="float: right;" class="btn btn-primary"
+          onclick='$("#event_${event.id}_panel_body").toggle("slow")'
+          >Show/Hide</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div id="event_${event.id}_panel_body">
+        <div id="event_${event.id}_cal" style="float: left;">
+          ${structure: event_cal}
+        </div>
+        <div id="event_${event.id}_prelims" style="float: right;">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              Currently scheduled prelims
+            </div>
+            <div class="panel-body">
+              ${structure: prelims}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

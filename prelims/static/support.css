@@ -1,0 +1,9 @@
+/* General support styles */
+
+.clear_on_focus {
+  color: gray;
+}
+
+.required_label {
+  color: red;
+}
