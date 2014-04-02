@@ -11,7 +11,6 @@ from .models import (
     DBSession,
     Faculty,
     Event,
-    EventDay,
     TimeSlot,
     PrelimAssignment,
     )
@@ -24,8 +23,7 @@ import nptime
 import time
 
 def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
-        interval_in_minutes, show_weekends=False, event=None,
-        hide_blackouts=False, uniqname=None):
+        interval_in_minutes, show_weekends=False):
     """Helper function that converts a date range to a series of HTML tables"""
     start = datetime.date(*map(int, start_date.split('-')))
     end   = datetime.date(*map(int,   end_date.split('-')))
@@ -40,6 +38,7 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
 
     start_mon = start - datetime.timedelta(days=start.weekday())
     end_fri   = end   + datetime.timedelta(days=4-end.weekday())
+    log.debug('start     {0} end     {1}'.format(start, end))
     log.debug('start_mon {0} end_fri {1}'.format(start_mon, end_fri))
 
     start_time = nptime.nptime(*map(int, (start_time[:2], start_time[2:])))
@@ -58,18 +57,6 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
         wr = w + datetime.timedelta(days=3)
         wf = w + datetime.timedelta(days=4)
 
-        if hide_blackouts:
-            def day_query(date):
-                try:
-                    return DBSession.query(EventDay).filter_by(event_id=event.id, date=date).one()
-                except NoResultFound:
-                    return None
-            wmd = day_query(wm)
-            wtd = day_query(wt)
-            wwd = day_query(ww)
-            wrd = day_query(wr)
-            wfd = day_query(wf)
-
         t = start_time
         entries = ''
         while (t < end_time):
@@ -79,70 +66,11 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
             r_cls = 'time_slot'
             f_cls = 'time_slot'
 
-            if hide_blackouts:
-                def blackout_query(day):
-                    if day == None:
-                        return True
-                    try:
-                        DBSession.query(TimeSlot).filter_by(
-                                event_day_id=day.id, uniqname=None, time_slot=t).one()
-                        return True
-                    except NoResultFound:
-                        return False
-
-                m_cls = 'disable_time_slot' if blackout_query(wmd) else m_cls
-                t_cls = 'disable_time_slot' if blackout_query(wtd) else t_cls
-                w_cls = 'disable_time_slot' if blackout_query(wwd) else w_cls
-                r_cls = 'disable_time_slot' if blackout_query(wrd) else r_cls
-                f_cls = 'disable_time_slot' if blackout_query(wfd) else f_cls
-
-                if uniqname != None:
-                    def busy_query(day):
-                        if blackout_query(day):
-                            return False
-                        try:
-                            DBSession.query(TimeSlot).filter_by(
-                                    event_day_id=day.id, uniqname=uniqname, time_slot=t).one()
-                            return True
-                        except NoResultFound:
-                            return False
-
-                    m_cls += ' busy_time_slot' if busy_query(wmd) else ''
-                    t_cls += ' busy_time_slot' if busy_query(wtd) else ''
-                    w_cls += ' busy_time_slot' if busy_query(wwd) else ''
-                    r_cls += ' busy_time_slot' if busy_query(wrd) else ''
-                    f_cls += ' busy_time_slot' if busy_query(wfd) else ''
-
-                    def lock_query(day):
-                        if blackout_query(day):
-                            return False
-                        try:
-                            DBSession.query(TimeSlot).filter_by(
-                                    event_day_id=day.id, uniqname=uniqname, time_slot=t).\
-                                            filter(TimeSlot.prelim_id != None).one()
-                            return True
-                        except NoResultFound:
-                            return False
-
-                    m_cls += ' lock_time_slot' if lock_query(wmd) else ''
-                    t_cls += ' lock_time_slot' if lock_query(wtd) else ''
-                    w_cls += ' lock_time_slot' if lock_query(wwd) else ''
-                    r_cls += ' lock_time_slot' if lock_query(wrd) else ''
-                    f_cls += ' lock_time_slot' if lock_query(wfd) else ''
-
-            if event is not None:
-                pass
-                ts_id_m = 'ts_{0}_{1}'.format(event.id, wm.strftime('%Y-%m-%d'))
-                ts_id_t = 'ts_{0}_{1}'.format(event.id, wt.strftime('%Y-%m-%d'))
-                ts_id_w = 'ts_{0}_{1}'.format(event.id, ww.strftime('%Y-%m-%d'))
-                ts_id_r = 'ts_{0}_{1}'.format(event.id, wr.strftime('%Y-%m-%d'))
-                ts_id_f = 'ts_{0}_{1}'.format(event.id, wf.strftime('%Y-%m-%d'))
-            else:
-                ts_id_m = 'ts_{0}'.format(wm.strftime('%Y-%m-%d'))
-                ts_id_t = 'ts_{0}'.format(wt.strftime('%Y-%m-%d'))
-                ts_id_w = 'ts_{0}'.format(ww.strftime('%Y-%m-%d'))
-                ts_id_r = 'ts_{0}'.format(wr.strftime('%Y-%m-%d'))
-                ts_id_f = 'ts_{0}'.format(wf.strftime('%Y-%m-%d'))
+            ts_id_m = 'ts_{0}'.format(wm.strftime('%Y-%m-%d'))
+            ts_id_t = 'ts_{0}'.format(wt.strftime('%Y-%m-%d'))
+            ts_id_w = 'ts_{0}'.format(ww.strftime('%Y-%m-%d'))
+            ts_id_r = 'ts_{0}'.format(wr.strftime('%Y-%m-%d'))
+            ts_id_f = 'ts_{0}'.format(wf.strftime('%Y-%m-%d'))
 
             entries += render('templates/week_entry.pt', {
                 'ts_id_m': ts_id_m,
@@ -152,12 +80,12 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
                 'ts_id_f': ts_id_f,
                 'time': t.strftime('%H-%M'),
                 'disp_time': t.strftime('%l:%M %p'),
-                'm_cls': 'disable_time_slot' if (start > wm) or (end < wm) else m_cls,
-                't_cls': 'disable_time_slot' if (start > wt) or (end < wt) else t_cls,
-                'w_cls': 'disable_time_slot' if (start > ww) or (end < ww) else w_cls,
-                'r_cls': 'disable_time_slot' if (start > wr) or (end < wr) else r_cls,
-                'f_cls': 'disable_time_slot' if (start > wf) or (end < wf) else f_cls,
-                })#, request=request)
+                'm_cls': 'disable_time_slot' if (start > wm) or (end < wm) else 'time_slot',
+                't_cls': 'disable_time_slot' if (start > wt) or (end < wt) else 'time_slot',
+                'w_cls': 'disable_time_slot' if (start > ww) or (end < ww) else 'time_slot',
+                'r_cls': 'disable_time_slot' if (start > wr) or (end < wr) else 'time_slot',
+                'f_cls': 'disable_time_slot' if (start > wf) or (end < wf) else 'time_slot',
+                })
             t += datetime.timedelta(minutes=interval_in_minutes)
 
         week_html += render('templates/week.pt', {
@@ -166,13 +94,75 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
                 (w + datetime.timedelta(days=5)).strftime('%b %e')),
             'entries': entries,
             'w': week_idx,
-            })#, request = request)
+            })
 
         w += datetime.timedelta(days=7)
         week_idx += 1
 
     #log.debug('Full week html: >>>{0}<<<'.format(week_html))
     return week_html
+
+def render_event(event, uniqname=None):
+    """Helper function that builds an HTML table for an event"""
+
+    start_time = nptime.nptime.from_time(event.start_time)
+    end_time = nptime.nptime.from_time(event.end_time)
+
+    weeks_html = ''
+    monday = event.start_date - datetime.timedelta(days=event.start_date.weekday())
+    while monday < event.end_date:
+        friday = monday + datetime.timedelta(days=5)
+        week_str = 'Week of {0} to {1}'.format(
+                monday.strftime('%b %e'), friday.strftime('%b %e'))
+
+        week_html = ''
+        day_time = start_time
+        while day_time < end_time:
+            row_html = ''
+            for day in xrange(5):
+                cls = 'time_slot'
+                t = datetime.datetime.combine(monday+datetime.timedelta(days=day), day_time)
+
+                if uniqname != None:
+                    exists = DBSession.query(TimeSlot).\
+                            filter_by(event_id=event.id).\
+                            filter_by(uniqname=uniqname).\
+                            filter_by(prelim_id=None).\
+                            filter_by(time_slot=t)
+                    try:
+                        exists.one()
+                        cls += ' busy_time_slot'
+                    except NoResultFound:
+                        pass
+
+                exists = DBSession.query(TimeSlot).\
+                        filter_by(event_id=event.id).\
+                        filter_by(uniqname=None).\
+                        filter_by(prelim_id=None).\
+                        filter_by(time_slot=t)
+                try:
+                    exists.one()
+                except NoResultFound:
+                    cls += ' disable_time_slot'
+
+                row_html += render('templates/day_entry.pt', {
+                    'ts_id' : 'ts_{0}_{1}'.format(event.id, (monday+datetime.timedelta(days=day)).strftime('%Y-%m-%d')),
+                    'time': day_time.strftime('%H-%M'),
+                    'disp_time': day_time.strftime('%l:%M %p'),
+                    'cls': cls,
+                    })
+
+            week_html += render('templates/week_entry2.pt', {'week': row_html})
+            day_time += datetime.timedelta(minutes=event.time_slot_size)
+
+        weeks_html += render('templates/week.pt', {
+            'week_str': week_str,
+            'entries': week_html,
+            'w': monday.isocalendar()[1],
+            })
+        monday += datetime.timedelta(days=7)
+
+    return weeks_html
 
 @view_config(route_name='login', renderer='templates/login.pt')
 def login_view(request):
@@ -219,27 +209,20 @@ def conf_view(request):
     events_html = ''
     extra_js = ''
     for event in DBSession.query(Event).order_by(Event.id):
-        query = DBSession.query(
-                func.min(EventDay.date).label("start"),
-                func.max(EventDay.date).label("end"),
-                ).filter_by(event_id=event.id)
-        res = query.one()
-        cal = render_date_range_to_weeks(
-                res.start.strftime('%Y-%m-%d'),
-                res.end.strftime('%Y-%m-%d'),
-                "0800",
-                "1700",
-                event.time_slot_size,
-                event=event,
-                hide_blackouts=True,
-                )
+        #Saved for syntax reference, query isn't needed
+        #query = DBSession.query(
+        #        func.min(TimeSlot.time_slot).label("start"),
+        #        func.max(TimeSlot.time_slot).label("end"),
+        #        ).filter_by(event_id=event.id)
+        #res = query.one()
+        cal = render_event(event)
 
         busy_js = ''
         can_schedule = []
         no_results = []
         for faculty in DBSession.query(Faculty).order_by(Faculty.uniqname):
             try:
-                busy = DBSession.query(TimeSlot).join(EventDay).join(Event).\
+                busy = DBSession.query(TimeSlot).join(Event).\
                         filter(Event.id==event.id).\
                         filter(TimeSlot.uniqname==faculty.uniqname).all()
                 if len(busy) == 0:
@@ -247,16 +230,10 @@ def conf_view(request):
                 for t in busy:
                     busy_js += '$("#ts_{0}_{1}_{2}").addClass("fac_busy_{3}");\n'.format(
                             event.id,
-                            t.event_day.date.strftime('%Y-%m-%d'),
+                            t.time_slot.strftime('%Y-%m-%d'),
                             t.time_slot.strftime('%H-%M'),
                             faculty.uniqname,
                             )
-                    #busy_js += 'console.log("#ts_{0}_{1}_{2} addClass(busy_{3})");\n'.format(
-                    #        event.id,
-                    #        t.event_day.date.strftime('%Y-%m-%d'),
-                    #        t.time_slot.strftime('%H-%M'),
-                    #        faculty.uniqname,
-                    #        )
                 can_schedule.append(faculty.uniqname)
             except NoResultFound:
                 no_results.append(faculty.uniqname)
@@ -266,8 +243,8 @@ def conf_view(request):
 
         events_html += render('templates/conf_event.pt', {
             'event': event,
-            'start': res.start,
-            'end': res.end,
+            'start': event.start_date,
+            'end': event.end_date,
             'event_cal': cal,
             'prelims': prelims_html,
             'can_schedule': can_schedule,
@@ -282,15 +259,23 @@ def new_event(request):
     try:
         log.debug(request.POST.mixed())
         hidden_inputs = ''
-        for n in ('new_event_name', 'new_time_slot_size', 'new_start', 'new_end', 'new_weekends'):
+        for n in (
+                'new_event_name',
+                'new_time_slot_size',
+                'new_start_date',
+                'new_end_date',
+                'new_start_time',
+                'new_end_time',
+                'new_weekends'
+                ):
             log.debug('\t{0}: {1}'.format(n, request.POST[n]))
             hidden_inputs += '<input type="hidden" name="{0}" value="{1}">'.format(
                     n, request.POST[n])
         weeks = render_date_range_to_weeks(
-                request.POST['new_start'],
-                request.POST['new_end'],
-                "0800",
-                "1700",
+                request.POST['new_start_date'],
+                request.POST['new_end_date'],
+                request.POST['new_start_time'],
+                request.POST['new_end_time'],
                 int(request.POST['new_time_slot_size']),
                 )
         return {
@@ -308,36 +293,47 @@ def new_event(request):
 def save_event(request):
     try:
         log.debug(request.POST.mixed())
+
+        syear, smonth, sday = map(int, request.POST['new_start_date'].split('-'))
+        eyear, emonth, eday = map(int, request.POST['new_end_date'  ].split('-'))
+        shour = int(request.POST['new_start_time'][:2])
+        smin  = int(request.POST['new_start_time'][2:])
+        ehour = int(request.POST['new_end_time'][:2])
+        emin  = int(request.POST['new_end_time'][2:])
+
         event = Event(
                 name=request.POST['new_event_name'],
                 time_slot_size=int(request.POST['new_time_slot_size']),
                 active=True,
+                start_date=datetime.date(syear, smonth, sday),
+                end_date=datetime.date(eyear, emonth, eday),
+                start_time=datetime.time(shour, smin),
+                end_time=datetime.time(ehour, emin),
                 )
         DBSession.add(event)
         DBSession.flush()
         log.debug("Created event: {0}".format(event))
 
-        start = datetime.date(*map(int, request.POST['new_start'].split('-')))
-        end   = datetime.date(*map(int, request.POST['new_end'  ].split('-')))
-        day_ids = {}
-
-        while start <= end:
-            event_day = EventDay(event_id=event.id, date=start)
-            DBSession.add(event_day)
-            DBSession.flush()
-            day_ids[start] = event_day.id
-            log.debug("Created event day: {0}".format(event_day))
-            start += datetime.timedelta(days=1)
-
-        # Add entries for blacked out times
+        blackouts = set()
         for blackout in request.POST['blackouts'].split():
             ts, date, time = blackout.split('_')
-            date = datetime.date(*map(int, date.split('-')))
-            time = datetime.time(*map(int, time.split('-')))
-            time_slot = TimeSlot(event_day_id=day_ids[date], time_slot=time)
-            DBSession.add(time_slot)
-            DBSession.flush()
-            log.debug("Created blackout time slot: {0}".format(time_slot))
+            y, m, d = map(int, date.split('-'))
+            h, M = map(int, time.split('-'))
+            blackouts.add(datetime.datetime(y, m, d, h, M))
+
+        # Add timeslots for this event
+        stime = datetime.datetime(syear, smonth, sday, shour, smin)
+        etime = datetime.datetime(eyear, emonth, eday, ehour, emin)
+        while stime < etime:
+            if stime not in blackouts:
+                time_slot = TimeSlot(event_id=event.id, time_slot=stime)
+                DBSession.add(time_slot)
+
+            # n.b. if custom time ranges are allowed, this should be modified to
+            # avoid wraparound end -> start over long time_slot_size's
+            stime += datetime.timedelta(minutes=event.time_slot_size)
+            if stime.time() >= datetime.time(ehour, emin):
+                stime += nptime.nptime(ehour, emin) - nptime.nptime(shour, smin)
     except:
         DBSession.rollback()
         log.debug("Rolled back DB")
@@ -368,21 +364,7 @@ def calendar_view(request):
         return HTTPFound(location='/login.html')
     events_html = ''
     for event in DBSession.query(Event).order_by(Event.id).filter_by(active=True):
-        query = DBSession.query(
-                func.min(EventDay.date).label("start"),
-                func.max(EventDay.date).label("end"),
-                ).filter_by(event_id=event.id)
-        res = query.one()
-        cal = render_date_range_to_weeks(
-                res.start.strftime('%Y-%m-%d'),
-                res.end.strftime('%Y-%m-%d'),
-                "0800",
-                "1700",
-                event.time_slot_size,
-                event=event,
-                hide_blackouts=True,
-                uniqname=uniqname,
-                )
+        cal = render_event(event, uniqname=uniqname)
 
         q = DBSession.query(PrelimAssignment).join(TimeSlot).\
                 filter(TimeSlot.uniqname==uniqname)
@@ -407,37 +389,26 @@ def update_times(request):
             ts, event_id, date, time = new_busy.split('_')
             date = datetime.date(*map(int, date.split('-')))
             time = datetime.time(*map(int, time.split('-')))
-
-            try:
-                event_day_id = day_ids[date]
-            except KeyError:
-                day_ids[date] = DBSession.query(EventDay).\
-                        filter_by(event_id=event_id).\
-                        filter_by(date=date).one().id
+            ts = datetime.datetime.combine(date, time)
 
             time_slot = TimeSlot(
-                    event_day_id=day_ids[date],
+                    event_id=event_id,
                     uniqname=request.session['uniqname'],
-                    time_slot=time,
+                    time_slot=ts,
                     )
             DBSession.add(time_slot)
-            DBSession.flush()
-            log.debug("Created busy time slot: {0}".format(time_slot))
 
         for new_free in request.POST['free_times'].split():
             ts, event_id, date, time = new_free.split('_')
             date = datetime.date(*map(int, date.split('-')))
             time = datetime.time(*map(int, time.split('-')))
+            ts = datetime.datetime.combine(date, time)
 
-            log.debug('ts {0} event_id {1} date {2} time {3}'.format(
-                ts, event_id, date, time))
-
-            ts = DBSession.query(TimeSlot).join(EventDay).join(Event).\
+            ts = DBSession.query(TimeSlot).join(Event).\
                     filter(Event.id==event_id).\
-                    filter(EventDay.date==date).\
-                    filter(TimeSlot.time_slot==time).\
-                    filter(TimeSlot.uniqname==request.session['uniqname']).one()
-            log.debug("ts: {0}".format(ts))
+                    filter(TimeSlot.uniqname==request.session['uniqname']).\
+                    filter(TimeSlot.time_slot==ts).\
+                    one()
 
             if ts.prelim_id != None:
                 # Someone got cute and circumvented to JS to try to delete a
@@ -491,16 +462,14 @@ def schedule_prelim(request):
 def select_prelim(request):
     try:
         log.debug(request.POST.mixed())
+        event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
+
         # Need:
-        #  'date':    A datetime.date object with the day chosen
-        #  'times':   An array of datetime.time (or nptime.nptime) objects that
-        #             represent the time slots taken by this event (e.g. this will
-        #             be a two-element array for a 1-hour meeting and 30-minute
-        #             timesteps).
+        #  'times':   An array of datetime.datetime objects that represent the
+        #             time slots taken by this event (e.g. this will be a two-
+        #             element array for a 1-hour meeting and 30-minute timesteps)
         #  'faculty': An array of uniqnames for each faculty being assigned
         #  'student': The uniqname of the student being scheduled
-
-        event_day = DBSession.query(EventDay).filter_by(event_id=event.id, date=date)
 
         prelim = PrelimAssignment(event_id=event.id, student_uniqname=student)
         DBSession.add(prelim)
@@ -508,7 +477,7 @@ def select_prelim(request):
         for fac in faculty:
             for t in times:
                 ts = TimeSlot(
-                        event_day_id=event_day.id,
+                        event_id=event.id,
                         time_slot=t,
                         uniqname=fac,
                         prelim_id=prelim.id,

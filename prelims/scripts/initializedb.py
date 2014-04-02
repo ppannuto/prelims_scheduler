@@ -16,7 +16,6 @@ from ..models import (
     DBSession,
     Faculty,
     TimeSlot,
-    EventDay,
     Event,
     Base,
     )
