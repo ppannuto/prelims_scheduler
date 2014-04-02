@@ -1,5 +1,9 @@
 /* General support styles */
 
+.clickable {
+  cursor: pointer;
+}
+
 .clear_on_focus {
   color: gray;
 }

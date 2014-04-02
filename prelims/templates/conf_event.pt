@@ -1,68 +1,113 @@
 <div id="event_${event.id}">
   <div class="panel panel-primary">
-    <div class="panel-heading">
-      <div style="overflow:hidden;">
-        <h2 style="float: left;">${event.name}</h2>
-        <button style="float: right;" class="btn btn-primary"
-          onclick='$("#event_${event.id}_panel_body").toggle("slow")'
-          >Show/Hide</button>
-      </div>
+    <div class="panel-heading clickable"
+      data-toggle="collapse"
+      data-parent="#event_${event.id}"
+      data-target="#event_${event.id}_body"
+      >
+      <h2>${event.name}</h2>
     </div>
-    <div class="panel-body">
-      <div id="event_${event.id}_panel_body">
+    <div id="event_${event.id}_body" class="panel-collapse collapse in">
+      <div class="panel-body">
         <p><i>I have not yet built the ability to edit an event. You'll have to delete
           this event and create a new one if you want to make any changes (for now at
           least), sorry.</i></p>
         <!-- <input type="checkbox" ${'checked' if event.active else ''}> Active -->
         <label class="col-sm-2">Start Date:</label><p class="col-sm-10">${start}</p>
         <label class="col-sm-2">  End Date:</label><p class="col-sm-10">  ${end}</p>
-        <button class="btn btn-default" onclick='$("#event_${event.id}_cal").toggle("slow")'>Show event calendar</button>
-        <div id="event_${event.id}_cal" style="display: none;">
-          ${structure: event_cal}
+
+        <!-- I have some bootstrap issue, I don't know what, but this fixes it for now at least -->
+        <button class="btn"></button>
+
+        <div id="event_${event.id}_cal">
+          <div class="panel panel-default">
+            <div class="panel-heading clickable"
+              data-toggle="collapse"
+              data-parent="#event_${event.id}_cal"
+              data-target="#event_${event.id}_cal_body"
+              >
+              In-depth calendar view
+            </div>
+            <div id="event_${event.id}_cal_body" class="panel-collapse collapse">
+              <div class="panel-body">
+                <div style="overflow: hidden;">
+                  <div class="col-md-6">
+                    ${structure: event_cal}
+                  </div>
+                  <div class="col-md-6">
+                    <h3>Faculty Calendars</h3>
+                    <p>Select faculty to see their free/busy information.</p>
+                    <p>Only faculty who have submitted free/busy information
+                    will appear in this list.</p>
+                    <p>If you select multiple faculty, the calendar will show
+                    when all of the selected faculty are free.</p>
+                    <label class="checkbox-inline" tal:repeat="fac can_schedule">
+                      <input type="checkbox" class="btn cal_watch_check" name="fac_cb"
+                        tal:attributes="value fac" tal:content="fac">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="event_${event.id}_schedule">
           <div class="panel panel-success">
-            <div class="panel-heading">
+            <div class="panel-heading clickable"
+              data-toggle="collapse"
+              data-parent="#event_${event.id}_schedule"
+              data-target="#event_${event.id}_schedule_body"
+              >
               Schedule a prelim
             </div>
-            <div class="panel-body">
-              <form role="form" action="/schedule_prelim" method="post"
-                >
-                <input type="checkbox" class="btn cal_watch_check" name="fac_cb"
-                  tal:repeat="fac can_schedule" tal:attributes="value fac" tal:content="fac">
-                <br />
-                <br />
-                <input type="hidden" name="event_id" value="${event.id}" />
-                <button type="submit" class="btn btn-success">Find available meeting times</button>
-              </form>
+            <div id="event_${event.id}_schedule_body" class="panel-collapse collapse in">
+              <div class="panel-body">
+                <form role="form" action="/schedule_prelim" method="post"
+                  >
+                  <input type="hidden" name="event_id" value="${event.id}" />
+                  <button type="submit" class="btn btn-success">Find available meeting times</button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
 
         <div id="event_${event.id}_prelims">
           <div class="panel panel-info">
-            <div class="panel-heading">
+            <div class="panel-heading clickable"
+              data-toggle="collapse"
+              data-parent="#event_${event.id}_prelims"
+              data-target="#event_${event.id}_prelims_body"
+              >
               Currently scheduled prelims
             </div>
-            <div class="panel-body">
-              ${structure: prelims}
+            <div id="event_${event.id}_prelims_body" class="panel-collapse collapse in">
+              <div class="panel-body">
+                ${structure: prelims}
+              </div>
             </div>
           </div>
         </div>
 
         <div id="event_${event.id}_responses">
           <div class="panel panel-warning">
-            <div class="panel-heading">
+            <div class="panel-heading clickable"
+              data-toggle="collapse"
+              data-parent="#event_${event.id}_responses"
+              data-target="#event_${event.id}_responses_body"
+              >
               The following faculty have not submitted any free/busy information
             </div>
-            <div class="panel-body">
-              <ul>
-                <a class="btn" tal:repeat="fac no_results" tal:content="fac" tal:attributes="href python:'mailto:{0}@umich.edu'.format(fac)"></a>
-              </ul>
-              <p>You can click on any individual faculty to send them an e-mail or
-              you can click on this button to e-mail all of the faculty on this list</p>
-              <a class="btn btn-warning" href="${python:'mailto:{0}@umich.edu'.format('@umich.edu,'.join(no_results))}">E-mail all non-responsive faculty</a>
+            <div id="event_${event.id}_responses_body" class="panel-collapse collapse in">
+              <div class="panel-body">
+                <ul>
+                  <a class="btn" tal:repeat="fac no_results" tal:content="fac" tal:attributes="href python:'mailto:{0}@umich.edu'.format(fac)"></a>
+                </ul>
+                <p>You can click on any individual faculty to send them an e-mail or
+                you can click on this button to e-mail all of the faculty on this list</p>
+                <a class="btn btn-warning" href="${python:'mailto:{0}@umich.edu'.format('@umich.edu,'.join(no_results))}">E-mail all non-responsive faculty</a>
+              </div>
             </div>
           </div>
         </div>
