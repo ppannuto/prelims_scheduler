@@ -20,7 +20,6 @@ function add_delete_form_hooks() {
 }
 
 function add_prelim_form_success(data, statusText, xhr, $form) {
-  console.log(data);
   var p = $("#event_"+data['event_id']+"_add_prelim_error_text");
   if (data['success']) {
     $("#event_"+data['event_id']+"_unscheduled_entries").append(data['html']);
@@ -32,11 +31,10 @@ function add_prelim_form_success(data, statusText, xhr, $form) {
     p.html("<strong>Error:</strong> " + data['msg']);
     p.parent().toggleClass('alert-success', false);
     p.parent().toggleClass('alert-danger', true);
-    console.log("#event_"+data['event_id']+"_add_prelim_error_text");
     console.log(data['msg']);
   }
   p.parent().show();
-  p.parent().delay(3000).fadeOut(1000);
+  p.parent().delay(10000).fadeOut(1000);
 }
 
 function delete_unscheduled_prelim_form_success(data) {

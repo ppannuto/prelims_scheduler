@@ -3,8 +3,13 @@ from pyramid.renderers import render
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
 
-from sqlalchemy.exc import DBAPIError
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import (
+    DBAPIError,
+    IntegrityError,
+    )
+from sqlalchemy.orm.exc import (
+    NoResultFound,
+    )
 from sqlalchemy.sql import func
 
 from .models import (
@@ -312,10 +317,22 @@ def add_prelim(request):
         return {'success': True, 'event_id': event.id,
                 'student': prelim.student_uniqname, 'html': prelim_html}
 
+    except KeyError:
+        DBSession.rollback()
+        return {'success': False, 'event_id': event.id,
+                'msg': 'Missing a key. (Must input a student name and all three faculty)'}
+
+    except IntegrityError as e:
+        DBSession.rollback()
+        return {'success': False, 'event_id': event.id,
+                'msg': "Something's duplicated. You can only schedule one prelim"
+                " per student and must have three distinct faculty for each"
+                " student."}
+
     except:
         DBSession.rollback()
         return {'success': False, 'event_id': event.id,
-                'msg': 'Could not add this prelim. Duplicate student? Duplicate faculty?'}
+                'msg': 'Could not add this prelim. Unknown error?'}
 
 @view_config(route_name='delete_unscheduled_prelim', request_method='POST', renderer='json')
 def delete_unscheduled_prelim(request):
