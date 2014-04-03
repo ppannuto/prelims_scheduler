@@ -9,9 +9,6 @@
     </div>
     <div id="event_${event.id}_body" class="panel-collapse collapse in">
       <div class="panel-body">
-        <p><i>I have not yet built the ability to edit an event. You'll have to delete
-          this event and create a new one if you want to make any changes (for now at
-          least), sorry.</i></p>
         <!-- <input type="checkbox" ${'checked' if event.active else ''}> Active -->
         <label class="col-sm-2">Start Date:</label><p class="col-sm-10">${start}</p>
         <label class="col-sm-2">  End Date:</label><p class="col-sm-10">  ${end}</p>
@@ -31,6 +28,11 @@
             <div id="event_${event.id}_cal_body" class="panel-collapse collapse">
               <div class="panel-body">
                 <div style="overflow: hidden;">
+                  <div class="col-md-12">
+                    <p><i>I have not yet built the ability to edit an event. You'll have to delete
+                      this event and create a new one if you want to make any changes (for now at
+                      least), sorry.</i></p>
+                  </div>
                   <div class="col-md-6">
                     ${structure: event_cal}
                   </div>
