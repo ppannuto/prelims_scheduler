@@ -20,6 +20,7 @@ from sqlalchemy.orm import (
     )
 
 from sqlalchemy.schema import (
+    CheckConstraint,
     UniqueConstraint,
     )
 
@@ -94,13 +95,18 @@ class PrelimAssignment(Base):
     __tablename__ = 'prelim_assignments'
     id = Column(Integer, primary_key=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
-    student_uniqname = Column(String(8))
-
-    __table_args__ = (UniqueConstraint('event_id', 'student_uniqname'), )
+    student_uniqname = Column(String(8), nullable=False)
 
     faculty1 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
     faculty2 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
     faculty3 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
+
+    __table_args__ = (
+            UniqueConstraint('event_id', 'student_uniqname'),
+            CheckConstraint('faculty1 != faculty2'),
+            CheckConstraint('faculty2 != faculty3'),
+            CheckConstraint('faculty1 != faculty3'),
+            )
 
     times = relationship("TimeSlot", backref='prelim',
             cascade='all, delete, delete-orphan')

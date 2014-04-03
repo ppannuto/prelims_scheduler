@@ -131,9 +131,12 @@
                       </div>
                     </div>
                   </div>
-                  <div class="col-xs-12">
+                  <div class="col-xs-2">
                     <input type="hidden" name="event_id" value="${event.id}" />
                     <button type="submit" class="btn btn-success">Add this prelim</button>
+                  </div>
+                  <div class="col-xs-10 alert">
+                    <p id="event_${event.id}_add_prelim_error_text"></p>
                   </div>
                 </form>
               </div>

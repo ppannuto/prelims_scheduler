@@ -309,12 +309,13 @@ def add_prelim(request):
             }, request = request)
         log.debug('rendered new prelim html')
 
-        return {'event_id': event.id, 'html': prelim_html}
+        return {'success': True, 'event_id': event.id,
+                'student': prelim.student_uniqname, 'html': prelim_html}
 
     except:
         DBSession.rollback()
-        log.debug("Rolled back DB")
-        raise
+        return {'success': False, 'event_id': event.id,
+                'msg': 'Could not add this prelim. Duplicate student? Duplicate faculty?'}
 
 @view_config(route_name='delete_unscheduled_prelim', request_method='POST', renderer='json')
 def delete_unscheduled_prelim(request):
