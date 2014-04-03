@@ -238,8 +238,29 @@ def conf_view(request):
             except NoResultFound:
                 no_results.append(faculty.uniqname)
 
-        q = DBSession.query(PrelimAssignment).order_by(PrelimAssignment.student_uniqname)
+        q = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.times!=None).\
+                order_by(PrelimAssignment.student_uniqname)
         prelims_html = render_prelims(DBSession, event, q)
+
+        unscheduled = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.times==None).\
+                order_by(PrelimAssignment.student_uniqname)
+        unscheduled_html = ''
+        for prelim in unscheduled.all():
+            f = []
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
+            f.sort()
+            unscheduled_html += render('templates/unscheduled_prelim.pt', {
+            'event': event,
+            'prelim': prelim,
+            'deleteable': True,
+            'student': prelim.student_uniqname,
+            'fac': f,
+            }, request = request)
+
 
         events_html += render('templates/conf_event.pt', {
             'event': event,
@@ -247,12 +268,61 @@ def conf_view(request):
             'end': event.end_date,
             'event_cal': cal,
             'prelims': prelims_html,
+            'unscheduled': unscheduled_html,
             'can_schedule': can_schedule,
             'no_results': no_results,
             }, request = request)
         extra_js += busy_js
 
     return {'events':events_html, 'extra_js':extra_js}
+
+@view_config(route_name='add_prelim', request_method='POST', renderer='json')
+def add_prelim(request):
+    try:
+        log.debug(request.POST.mixed())
+        event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
+
+        f1 = DBSession.query(Faculty).filter_by(uniqname=request.POST['faculty1']).one()
+        f2 = DBSession.query(Faculty).filter_by(uniqname=request.POST['faculty2']).one()
+        f3 = DBSession.query(Faculty).filter_by(uniqname=request.POST['faculty3']).one()
+        log.debug('queried all faculty successfully')
+
+        prelim = PrelimAssignment(
+                event_id=event.id,
+                student_uniqname=request.POST['student'],
+                faculty1=f1.id,
+                faculty2=f2.id,
+                faculty3=f3.id,
+                )
+        DBSession.add(prelim)
+        log.debug('added prelim successfully')
+
+        # Must flush so that the prelim has an id
+        DBSession.flush()
+
+        prelim_html = render('templates/unscheduled_prelim.pt', {
+            'event': event,
+            'prelim': prelim,
+            'deleteable': True,
+            'student': prelim.student_uniqname,
+            'fac': (f1.uniqname, f2.uniqname, f3.uniqname),
+            }, request = request)
+        log.debug('rendered new prelim html')
+
+        return {'event_id': event.id, 'html': prelim_html}
+
+    except:
+        DBSession.rollback()
+        log.debug("Rolled back DB")
+        raise
+
+@view_config(route_name='delete_unscheduled_prelim', request_method='POST', renderer='json')
+def delete_unscheduled_prelim(request):
+    log.debug(request.POST.mixed())
+    prelim = DBSession.query(PrelimAssignment).filter_by(id=request.POST['prelim_id']).one()
+    resp = {'event_id': prelim.event_id, 'student': prelim.student_uniqname}
+    DBSession.delete(prelim)
+    return resp
 
 @view_config(route_name='new_event', renderer='templates/new_event.pt')
 def new_event(request):

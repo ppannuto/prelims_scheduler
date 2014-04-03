@@ -1,0 +1,17 @@
+<div id="event_${event.id}_unscheduled_${student}">
+  <div class="row">
+    <div tal:condition="deleteable" class="col-xs-1">
+      <form role="form" class="form-horizontal delete_unscheduled_prelim_form"
+        action="/delete_unscheduled_prelim" method="post"
+        >
+        <input type="hidden" name="prelim_id" value="${prelim.id}">
+        <input type="hidden" name="event_id" value="${event.id}">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+    </div>
+    <label class="col-xs-1 btn"><strong>${student}</strong></label>
+    <div tal:repeat="f fac" tal:content="f" class="col-xs-1 btn"></div>
+    <div tal:condition="deleteable" class="col-xs-7"></div>
+    <div tal:condition="not:deleteable" class="col-xs-8"></div>
+  </div>
+</div>

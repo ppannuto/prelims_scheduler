@@ -22,6 +22,8 @@ def main(global_config, **settings):
     config.add_route('login', '/login.html')
     config.add_route('logout', '/logout')
     config.add_route('conf', '/conf.html')
+    config.add_route('add_prelim', '/add_prelim')
+    config.add_route('delete_unscheduled_prelim', '/delete_unscheduled_prelim')
     config.add_route('new_event', '/new_event')
     config.add_route('save_new_event', '/save_new_event')
     config.add_route('delete_event', '/delete_event')

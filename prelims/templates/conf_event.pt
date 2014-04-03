@@ -52,27 +52,6 @@
           </div>
         </div>
 
-        <div id="event_${event.id}_schedule">
-          <div class="panel panel-success">
-            <div class="panel-heading clickable"
-              data-toggle="collapse"
-              data-parent="#event_${event.id}_schedule"
-              data-target="#event_${event.id}_schedule_body"
-              >
-              Schedule a prelim
-            </div>
-            <div id="event_${event.id}_schedule_body" class="panel-collapse collapse in">
-              <div class="panel-body">
-                <form role="form" action="/schedule_prelim" method="post"
-                  >
-                  <input type="hidden" name="event_id" value="${event.id}" />
-                  <button type="submit" class="btn btn-success">Find available meeting times</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div id="event_${event.id}_prelims">
           <div class="panel panel-info">
             <div class="panel-heading clickable"
@@ -85,6 +64,78 @@
             <div id="event_${event.id}_prelims_body" class="panel-collapse collapse in">
               <div class="panel-body">
                 ${structure: prelims}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="event_${event.id}_schedule">
+          <div class="panel panel-success">
+            <div class="panel-heading clickable"
+              data-toggle="collapse"
+              data-parent="#event_${event.id}_schedule"
+              data-target="#event_${event.id}_schedule_body"
+              >
+              Prelim scheduling
+            </div>
+            <div id="event_${event.id}_schedule_body" class="panel-collapse collapse in">
+              <div class="panel-body">
+                <div id="event_${event.id}_unscheduled">
+                  <div class="col-xs-12">
+                    <h3>Unscheduled Prelims</h3>
+                  </div>
+                  <div id="event_${event.id}_unscheduled_entries">
+                    ${structure: unscheduled}
+                  </div>
+                  <div class="col-xs-12">
+                    <form role="form"
+                      action="/schedule_unscheduled" method="post"
+                      >
+                      <input type="hidden" name="event_id" value="${event.id}" />
+                      <button type="submit" class="btn btn-success">Create schedule for the unscheduled prelims</button>
+                    </form>
+                  </div>
+                </div>
+                <div class="col-xs-12">
+                  <h3>Add new prelim</h3>
+                </div>
+                <form role="form" class="form-horizontal add_prelim_form"
+                  action="/add_prelim" method="post"
+                  >
+                  <div id="event_${event.id}_schedule_rows">
+                    <div class="event_schedule_row">
+                      <label for="event_${event.id}_student" class="col-xs-1 control-label">Student:</label>
+                      <div class="col-xs-2">
+                        <input type="text" class="form-control" id="event_${event.id}_student" name="student">
+                      </div>
+                      <label for="event_${event.id}_faculty1" class="col-xs-1 control-label">Faculty:</label>
+                      <div class="col-xs-2">
+                        <select class="form-control schedule_faculty" name="faculty1">
+                          <option tal:repeat="fac can_schedule"
+                            tal:attributes="value fac" tal:content="fac" />
+                        </select>
+                      </div>
+                      <label for="event_${event.id}_faculty2" class="col-xs-1 control-label">Faculty:</label>
+                      <div class="col-xs-2">
+                        <select class="form-control schedule_faculty" name="faculty2">
+                          <option tal:repeat="fac can_schedule"
+                            tal:attributes="value fac" tal:content="fac" />
+                        </select>
+                      </div>
+                      <label for="event_${event.id}_faculty3" class="col-xs-1 control-label">Faculty:</label>
+                      <div class="col-xs-2">
+                        <select class="form-control schedule_faculty" name="faculty3">
+                          <option tal:repeat="fac can_schedule"
+                            tal:attributes="value fac" tal:content="fac" />
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-xs-12">
+                    <input type="hidden" name="event_id" value="${event.id}" />
+                    <button type="submit" class="btn btn-success">Add this prelim</button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

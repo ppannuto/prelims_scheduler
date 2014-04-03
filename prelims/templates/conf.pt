@@ -96,6 +96,7 @@
   </div>
 
   <div metal:fill-slot="footer_js">
+    <script src="/static/conf.js"></script>
     <script>
       function validate_new_event() {
         console.log("validating form...")

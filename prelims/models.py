@@ -19,6 +19,10 @@ from sqlalchemy.orm import (
     backref,
     )
 
+from sqlalchemy.schema import (
+    UniqueConstraint,
+    )
+
 from zope.sqlalchemy import ZopeTransactionExtension
 
 import logging
@@ -92,8 +96,18 @@ class PrelimAssignment(Base):
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     student_uniqname = Column(String(8))
 
+    __table_args__ = (UniqueConstraint('event_id', 'student_uniqname'), )
+
+    faculty1 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
+    faculty2 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
+    faculty3 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
+
     times = relationship("TimeSlot", backref='prelim',
             cascade='all, delete, delete-orphan')
+
+    def __repr__(self):
+        return "<PrelimAssignment(id='{0}', event_id='{1}', student_uniqname='{2}', faculty1='{3}', faculty2='{4}', faculty3='{5}')>".format(
+                self.id, self.event_id, self.student_uniqname, self.faculty1, self.faculty2, self.faculty3)
 
 #class Meeting(Base):
 #    __tablename__ = 'meetings'
