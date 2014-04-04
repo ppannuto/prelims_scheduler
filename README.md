@@ -59,6 +59,10 @@ table with the list found in `prelims/scripts/fac_uniqs`.
 
     initialize_prelims_db development.ini
 
+> If you are developing, it may be more useful to skip this step and instead
+> use the example database which is pre-populated with a little bit of test
+> data. In that case, all you need to do is `cp exampledb.sqlite prelims.sqlite`
+
 ### Deploying the webapp
 
 For basic testing / debugging, python includes a built-in http server, which is
