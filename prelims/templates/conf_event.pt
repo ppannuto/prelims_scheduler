@@ -95,7 +95,7 @@
                       action="/schedule_unscheduled" method="post"
                       >
                       <input type="hidden" name="event_id" value="${event.id}" />
-                      <button type="submit" class="btn btn-success disabled">Create schedule for the unscheduled prelims</button>
+                      <button type="submit" class="btn btn-success">Create schedule for the unscheduled prelims</button>
                       <p style="color: red;">This feature doesn't work yet, but will soon!</p>
                     </form>
                   </div>

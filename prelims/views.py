@@ -605,52 +605,69 @@ def cancel_prelim(request):
 
     return HTTPFound(location='/conf.html')
 
-@view_config(route_name='schedule_prelim', renderer='templates/schedule_prelim.pt')
+@view_config(route_name='schedule_unscheduled', request_method='POST')
 def schedule_prelim(request):
     try:
         log.debug(request.POST.mixed())
         event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
-        faculty = request.POST['fac_cb']
+        # 'event':       A reference to this event (prelims) in the database
 
-        # Have:
-        #  'event':   A reference to this event (prelims) in the database
-        #  'faculty': An array of faculty uniqnames to come up with candidate
-        #             schedules for
+        unscheduled = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.times==None).\
+                order_by(PrelimAssignment.student_uniqname).all()
+        # 'unscheduled': An array of prelims that need to be scheduled.
 
-        raise NotImplementedError("Scheduler Integration")
+        # 'prelim':      Each element of unscheduled is an instance of Prelim
+        #                as defined by models.py
 
-    except:
-        DBSession.rollback()
-        log.debug("Rolled back DB")
-        raise
+        # To convert a faculty_id to a uniqname:
+        FACULTY_ID = unscheduled[0].faculty1
+        FACULTY_UNIQNAME = DBSession.query(Faculty.uniqname).\
+                filter_by(id=FACULTY_ID).\
+                scalar()
 
-    return {'event': event}
+        # To query for all busy times for a given faculty member:
+        busy_times = DBSession.query(TimeSlot).\
+                filter_by(event_id=event.id).\
+                filter_by(uniqname=FACULTY_UNIQNAME)
 
-@view_config(route_name='select_prelim', request_method='POST')
-def select_prelim(request):
-    try:
-        log.debug(request.POST.mixed())
-        event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
+        # busy_times is an array of TimeSlot objects as defined in models.py
+        #
+        #  if busy_times[N].prelim_id == None:
+        #    The faculty member listed this time as busy
+        #  else:
+        #    The faculty member is scheduled for a prelim at this time already
 
-        # Need:
-        #  'times':   An array of datetime.datetime objects that represent the
-        #             time slots taken by this event (e.g. this will be a two-
-        #             element array for a 1-hour meeting and 30-minute timesteps)
-        #  'faculty': An array of uniqnames for each faculty being assigned
-        #  'student': The uniqname of the student being scheduled
 
-        prelim = PrelimAssignment(event_id=event.id, student_uniqname=student)
-        DBSession.add(prelim)
+        # Dawn is allowed to "black out" some times as invalid for any prelims
+        # To query for all valid times to schedule
+        valid_times = DBSession.query(TimeSlot).\
+                filter_by(event_id=event.id).\
+                filter_by(uniqname=None).\
+                filter_by(prelim_id=None).\
+                all()
 
-        for fac in faculty:
-            for t in times:
-                ts = TimeSlot(
-                        event_id=event.id,
-                        time_slot=t,
-                        uniqname=fac,
-                        prelim_id=prelim.id,
-                        )
-                DBSession.add(ts)
+        def add_scheduled_prelim_to_db(times, prelim_id):
+            # 'times':     An array of datetime.datetime objects that represent the
+            #              time slots taken by this event (e.g. this will be a two-
+            #              element array for a 1-hour meeting and 30-minute timesteps)
+            # 'prelim_id': The prelim being scheduled
+
+            prelim = PrelimAssignment(event_id=event.id, student_uniqname=student)
+            DBSession.add(prelim)
+
+            for fac in faculty:
+                for t in times:
+                    ts = TimeSlot(
+                            event_id=event.id,
+                            time_slot=t,
+                            uniqname=fac,
+                            prelim_id=prelim.id,
+                            )
+                    DBSession.add(ts)
+
+        # TODO: Integrate scheduling here
+
     except:
         DBSession.rollback()
         log.debug("Rolled back DB")

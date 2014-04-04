@@ -32,7 +32,6 @@ def main(global_config, **settings):
     config.add_route('calendar', '/calendar.html')
     config.add_route('update_times', '/update_times')
     config.add_route('cancel_prelim', '/cancel_prelim')
-    config.add_route('schedule_prelim', '/schedule_prelim')
-    config.add_route('select_prelim', '/select_prelim')
+    config.add_route('schedule_unscheduled', '/schedule_unscheduled')
     config.scan()
     return config.make_wsgi_app()
