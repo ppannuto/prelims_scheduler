@@ -192,7 +192,6 @@ def login_view(request):
 
 @view_config(route_name='logout', request_method='POST')
 def logout_view(request):
-    print("Invaliding session")
     request.session.invalidate()
     return HTTPFound(location='/')
 
