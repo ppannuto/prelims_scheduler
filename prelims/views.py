@@ -107,7 +107,7 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
     #log.debug('Full week html: >>>{0}<<<'.format(week_html))
     return week_html
 
-def render_event(event, uniqname=None):
+def render_event(event, uniqname=None, blackout_as_busy=False):
     """Helper function that builds an HTML table for an event"""
 
     start_time = nptime.nptime.from_time(event.start_time)
@@ -128,27 +128,33 @@ def render_event(event, uniqname=None):
                 cls = 'time_slot'
                 t = datetime.datetime.combine(monday+datetime.timedelta(days=day), day_time)
 
-                if uniqname != None:
+                if t.date() < event.start_date or t.date() > event.end_date:
+                    cls += ' disable_time_slot'
+                else:
+                    if uniqname != None:
+                        exists = DBSession.query(TimeSlot).\
+                                filter_by(event_id=event.id).\
+                                filter_by(uniqname=uniqname).\
+                                filter_by(prelim_id=None).\
+                                filter_by(time_slot=t)
+                        try:
+                            exists.one()
+                            cls += ' busy_time_slot'
+                        except NoResultFound:
+                            pass
+
                     exists = DBSession.query(TimeSlot).\
                             filter_by(event_id=event.id).\
-                            filter_by(uniqname=uniqname).\
+                            filter_by(uniqname=None).\
                             filter_by(prelim_id=None).\
                             filter_by(time_slot=t)
                     try:
                         exists.one()
-                        cls += ' busy_time_slot'
                     except NoResultFound:
-                        pass
-
-                exists = DBSession.query(TimeSlot).\
-                        filter_by(event_id=event.id).\
-                        filter_by(uniqname=None).\
-                        filter_by(prelim_id=None).\
-                        filter_by(time_slot=t)
-                try:
-                    exists.one()
-                except NoResultFound:
-                    cls += ' disable_time_slot'
+                        if blackout_as_busy:
+                            cls += ' busy_time_slot'
+                        else:
+                            cls += ' disable_time_slot'
 
                 row_html += render('templates/day_entry.pt', {
                     'ts_id' : 'ts_{0}_{1}'.format(event.id, (monday+datetime.timedelta(days=day)).strftime('%Y-%m-%d')),
@@ -367,6 +373,7 @@ def new_event(request):
                 int(request.POST['new_time_slot_size']),
                 )
         return {
+                'mode': 'save',
                 'name': request.POST['new_event_name'],
                 'weeks': weeks,
                 'hidden_inputs': hidden_inputs,
@@ -377,7 +384,7 @@ def new_event(request):
         raise
         return HTTPFound(location='/conf.html')
 
-@view_config(route_name='save_new_event', request_method='POST')
+@view_config(route_name='save_event', request_method='POST')
 def save_event(request):
     try:
         log.debug(request.POST.mixed())
@@ -428,6 +435,79 @@ def save_event(request):
         raise
 
     return HTTPFound(location='/conf.html')
+
+@view_config(route_name='edit_event', renderer='templates/new_event.pt', request_method='POST')
+def edit_event(request):
+    log.debug(request.POST.mixed())
+    event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
+
+    cal = render_event(event, blackout_as_busy=True)
+
+    return {
+            'mode': 'update',
+            'name': event.name,
+            'weeks': cal,
+            'hidden_inputs': '<input type="hidden" name="event_id" value="{0}">'.format(event.id)
+            }
+
+@view_config(route_name='update_event', request_method='POST')
+def update_event(request):
+    log.debug(request.POST.mixed())
+    event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
+
+    blackouts = set()
+    for blackout in request.POST['blackouts'].split():
+        ts, ev_id, date, time = blackout.split('_')
+        y, m, d = map(int, date.split('-'))
+        h, M = map(int, time.split('-'))
+        blackouts.add(datetime.datetime(y, m, d, h, M))
+
+    stime = datetime.datetime.combine(event.start_date, event.start_time)
+    etime = datetime.datetime.combine(event.end_date, event.end_time)
+    while stime < etime:
+        if stime not in blackouts:
+            try:
+                DBSession.query(TimeSlot).\
+                        filter_by(event_id=event.id).\
+                        filter_by(time_slot=stime).\
+                        filter_by(uniqname=None).\
+                        filter_by(prelim_id=None).one()
+            except NoResultFound:
+                time_slot = TimeSlot(event_id=event.id, time_slot=stime)
+                DBSession.add(time_slot)
+        else:
+            try:
+                DBSession.query(TimeSlot).\
+                        filter_by(event_id=event.id).\
+                        filter_by(time_slot=stime).\
+                        filter(TimeSlot.uniqname!=None).\
+                        filter_by(prelim_id=None).delete()
+                prelims = DBSession.query(TimeSlot).\
+                        filter_by(event_id=event.id).\
+                        filter_by(time_slot=stime).\
+                        filter_by(uniqname=None).\
+                        filter(TimeSlot.prelim_id!=None).all()
+                for prelim in prelims:
+                    DBSession.query(TimeSlot).\
+                            filter_by(event_id=event.id).\
+                            filter_by(time_slot=stime).\
+                            filter_by(prelim_id=prelim.id).delete()
+                DBSession.query(TimeSlot).\
+                        filter_by(event_id=event.id).\
+                        filter_by(time_slot=stime).\
+                        filter_by(uniqname=None).\
+                        filter_by(prelim_id=None).delete()
+            except NoResultFound:
+                pass
+
+        # n.b. if custom time ranges are allowed, this should be modified to
+        # avoid wraparound end -> start over long time_slot_size's
+        stime += datetime.timedelta(minutes=event.time_slot_size)
+        if stime.time() >= event.end_time:
+            stime += nptime.nptime().from_time(event.end_time) - nptime.nptime().from_time(event.start_time)
+
+    return HTTPFound(location='/conf.html')
+
 
 @view_config(route_name='delete_event', request_method='POST')
 def delete_event(request):

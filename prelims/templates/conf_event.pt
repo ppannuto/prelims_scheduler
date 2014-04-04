@@ -28,11 +28,6 @@
             <div id="event_${event.id}_cal_body" class="panel-collapse collapse">
               <div class="panel-body">
                 <div style="overflow: hidden;">
-                  <div class="col-md-12">
-                    <p><i>I have not yet built the ability to edit an event. You'll have to delete
-                      this event and create a new one if you want to make any changes (for now at
-                      least), sorry.</i></p>
-                  </div>
                   <div class="col-md-6">
                     ${structure: event_cal}
                   </div>
@@ -49,6 +44,12 @@
                     </label>
                   </div>
                 </div>
+              </div>
+              <div class="panel-footer">
+                <form role="form" action="/edit_event" method="post">
+                  <input type="hidden" name="event_id" value="${event.id}">
+                  <button type="submit" class="btn btn-default">Edit blackout times</button>
+                </form>
               </div>
             </div>
           </div>
@@ -83,13 +84,13 @@
             <div id="event_${event.id}_schedule_body" class="panel-collapse collapse in">
               <div class="panel-body">
                 <div id="event_${event.id}_unscheduled">
-                  <div class="col-xs-12">
+                  <div class="row col-xs-12">
                     <h3>Unscheduled Prelims</h3>
                   </div>
                   <div id="event_${event.id}_unscheduled_entries">
                     ${structure: unscheduled}
                   </div>
-                  <div class="col-xs-12">
+                  <div class="row col-xs-12">
                     <form role="form"
                       action="/schedule_unscheduled" method="post"
                       >
@@ -98,14 +99,14 @@
                     </form>
                   </div>
                 </div>
-                <div class="col-xs-12">
+                <div class="row col-xs-12">
                   <h3>Add new prelim</h3>
                 </div>
                 <form role="form" class="form-horizontal add_prelim_form"
                   action="/add_prelim" method="post"
                   >
                   <div id="event_${event.id}_schedule_rows">
-                    <div class="event_schedule_row">
+                    <div class="row event_schedule_row">
                       <label for="event_${event.id}_student" class="col-xs-1 control-label">Student:</label>
                       <div class="col-xs-2">
                         <input type="text" class="form-control" id="event_${event.id}_student" name="student">
@@ -133,12 +134,14 @@
                       </div>
                     </div>
                   </div>
-                  <div class="col-xs-2">
-                    <input type="hidden" name="event_id" value="${event.id}" />
-                    <button type="submit" class="btn btn-success">Add this prelim</button>
-                  </div>
-                  <div class="col-xs-10 alert">
-                    <p id="event_${event.id}_add_prelim_error_text"></p>
+                  <div class="row">
+                    <div class="col-xs-2">
+                      <input type="hidden" name="event_id" value="${event.id}" />
+                      <button type="submit" class="btn btn-success">Add this prelim</button>
+                    </div>
+                    <div class="col-xs-10 alert">
+                      <p id="event_${event.id}_add_prelim_error_text"></p>
+                    </div>
                   </div>
                 </form>
               </div>
