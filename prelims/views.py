@@ -255,6 +255,7 @@ def conf_view(request):
         prelims_html = render_prelims(DBSession, event, q)
 
         unscheduled = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.event_id==event.id).\
                 filter(PrelimAssignment.times==None).\
                 order_by(PrelimAssignment.student_uniqname)
         unscheduled_html = ''
@@ -540,6 +541,7 @@ def calendar_view(request):
 
         fid = DBSession.query(Faculty.id).filter_by(uniqname=uniqname).scalar()
         unscheduled = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.event_id==event.id).\
                 filter(PrelimAssignment.times==None).\
                 filter((PrelimAssignment.faculty1==fid)|(PrelimAssignment.faculty2==fid)|(PrelimAssignment.faculty3==fid)).\
                 order_by(PrelimAssignment.student_uniqname)
@@ -645,6 +647,7 @@ def schedule_prelim(request):
         # 'event':       A reference to this event (prelims) in the database
 
         unscheduled = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.event_id==event.id).\
                 filter(PrelimAssignment.times==None).\
                 order_by(PrelimAssignment.student_uniqname).all()
         # 'unscheduled': An array of prelims that need to be scheduled.
