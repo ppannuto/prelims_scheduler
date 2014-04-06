@@ -538,10 +538,31 @@ def calendar_view(request):
                 filter(TimeSlot.uniqname==uniqname)
         prelims_html = render_prelims(DBSession, event, q)
 
+        fid = DBSession.query(Faculty.id).filter_by(uniqname=uniqname).scalar()
+        unscheduled = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.times==None).\
+                filter((PrelimAssignment.faculty1==fid)|(PrelimAssignment.faculty2==fid)|(PrelimAssignment.faculty3==fid)).\
+                order_by(PrelimAssignment.student_uniqname)
+        unscheduled_html = ''
+        for prelim in unscheduled.all():
+            f = []
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
+            f.sort()
+            unscheduled_html += render('templates/unscheduled_prelim.pt', {
+            'event': event,
+            'prelim': prelim,
+            'deleteable': False,
+            'student': prelim.student_uniqname,
+            'fac': f,
+            }, request = request)
+
         events_html += render('templates/cal_event.pt', {
             'event': event,
             'event_cal': cal,
             'prelims': prelims_html,
+            'unscheduled': unscheduled_html,
             }, request = request)
 
     try:

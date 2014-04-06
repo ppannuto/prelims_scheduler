@@ -10,16 +10,55 @@
     <div id="event_${event.id}_body" class="panel-collapse collapse in">
       <div class="panel-body">
         <div id="event_${event.id}_panel_body">
-          <div id="event_${event.id}_cal" style="float: left;">
-            ${structure: event_cal}
+          <div class="col-lg-6">
+            <div id="event_${event.id}_cal">
+              ${structure: event_cal}
+            </div>
           </div>
-          <div id="event_${event.id}_prelims" style="float: right;">
-            <div class="panel panel-info">
-              <div class="panel-heading">
-                Currently scheduled prelims
+          <div class="col-lg-6">
+            <div id="event_${event.id}_prelims">
+              <div class="panel panel-info" id="event_${event.id}_scheduled">
+                <div class="panel-heading clickable"
+                  data-toggle="collapse"
+                  data-parent="#event_${event.id}_scheduled"
+                  data-target="#event_${event.id}_scheduled_body"
+                  >
+                  Currently scheduled prelims
+                </div>
+                <div class="panel-collapse collapse in" id="event_${event.id}_scheduled_body">
+                  <div class="panel-body">
+                    <div tal:condition="prelims">
+                      ${structure: prelims}
+                    </div>
+                    <div tal:condition="not:prelims">
+                      <p><i>You currently have no scheduled prelims.</i></p>
+                      <p>When prelims have a scheduled time, they will appear in this area</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="panel-body">
-                ${structure: prelims}
+              <div class="panel panel-success" id="event_${event.id}_unscheduled">
+                <div class="panel-heading clickable"
+                  data-toggle="collapse"
+                  data-parent="#event_${event.id}_unscheduled"
+                  data-target="#event_${event.id}_unscheduled_body"
+                  >
+                  Unscheduled assigned prelims
+                </div>
+                <div class="panel-collapse collapse in" id="event_${event.id}_unscheduled_body">
+                  <div class="panel-body">
+                    <div tal:condition="unscheduled">
+                      <div class="container">
+                        ${structure: unscheduled}
+                      </div>
+                    </div>
+                    <div tal:condition="not:unscheduled">
+                      <p><i>You currently have no unscheduled prelims assigned to you.</i></p>
+                      <p>Any prelims assigned to you that have not yet been scheduled
+                      will appear in this area.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
