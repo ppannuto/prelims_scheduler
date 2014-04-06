@@ -27,6 +27,11 @@
       </div>
     </div>
 
+    <div class="alert alert-success fade in" tal:condition="info_success">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+      <p>${structure: info_success}</p>
+    </div>
+
     <div>
       ${structure: events}
     </div>

@@ -1,5 +1,6 @@
 from pyramid.response import Response
 from pyramid.renderers import render
+from pyramid.request import Request
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
 
@@ -542,7 +543,17 @@ def calendar_view(request):
             'event_cal': cal,
             'prelims': prelims_html,
             }, request = request)
-    return {'events': events_html}
+
+    try:
+        info_success = request.session['success_info']
+        del request.session['success_info']
+    except KeyError:
+        info_success = None
+
+    return {
+            'events': events_html,
+            'info_success': info_success,
+            }
 
 @view_config(route_name="update_times", request_method='POST')
 def update_times(request):
@@ -587,7 +598,8 @@ def update_times(request):
         log.debug("Rolled back DB")
         raise
 
-    return HTTPFound(location='/calendar.html')
+    request.session['success_info'] = "<strong>Success:</strong> Updated free/busy information"
+    return HTTPFound('/calendar.html')
 
 @view_config(route_name='cancel_prelim', request_method='POST')
 def cancel_prelim(request):
