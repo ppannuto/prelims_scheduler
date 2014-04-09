@@ -107,11 +107,17 @@
                   action="/add_prelim" method="post"
                   >
                   <div id="event_${event.id}_schedule_rows">
-                    <div class="row event_schedule_row">
+                    <div class="row">
                       <label for="event_${event.id}_student" class="col-xs-1 control-label">Student:</label>
                       <div class="col-xs-2">
                         <input type="text" class="form-control" id="event_${event.id}_student" name="student">
                       </div>
+                      <label for="event_${event.id}_title" class="col-xs-1 control-label">Title:</label>
+                      <div class="col-xs-8">
+                        <input type="text" class="form-control" id="event_${event.id}_title" name="title">
+                      </div>
+                    </div>
+                    <div class="row">
                       <label for="event_${event.id}_faculty1" class="col-xs-1 control-label">Faculty:</label>
                       <div class="col-xs-2">
                         <select class="form-control schedule_faculty" name="faculty1">
@@ -129,6 +135,13 @@
                       <label for="event_${event.id}_faculty3" class="col-xs-1 control-label">Faculty:</label>
                       <div class="col-xs-2">
                         <select class="form-control schedule_faculty" name="faculty3">
+                          <option tal:repeat="fac can_schedule"
+                            tal:attributes="value fac" tal:content="fac" />
+                        </select>
+                      </div>
+                      <label for="event_${event.id}_faculty4" class="col-xs-1 control-label">Alternate:</label>
+                      <div class="col-xs-2">
+                        <select class="form-control schedule_faculty" name="faculty4">
                           <option tal:repeat="fac can_schedule"
                             tal:attributes="value fac" tal:content="fac" />
                         </select>

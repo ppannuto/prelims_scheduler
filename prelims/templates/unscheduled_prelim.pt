@@ -9,9 +9,15 @@
         <button type="submit" class="btn btn-danger">Delete</button>
       </form>
     </div>
-    <label class="col-lg-1 btn"><strong>${student}</strong></label>
-    <div tal:repeat="f fac" tal:content="f" class="col-lg-1 btn"></div>
-    <div tal:condition="deleteable" class="col-lg-7"></div>
-    <div tal:condition="not:deleteable" class="col-lg-8"></div>
+    <label class="col-lg-1"><strong>${student}</strong></label>
+    <div tal:repeat="f fac" tal:content="f" class="col-lg-1"></div>
+    <div tal:condition="not:deleteable" class="col-lg-1"></div>
+    <div class=" col-lg-5">
+      <em><p style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" tal:content="prelim.title" /></em>
+    </div>
+    <div class="col-lg-1">
+      <a tal:condition="paper_url" tal:attributes="href paper_url">paper</a>
+      <p tal:condition="not:paper_url">(no pdf)</p>
+    </div>
   </div>
 </div>

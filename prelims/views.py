@@ -264,6 +264,7 @@ def conf_view(request):
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname)
             f.sort()
             unscheduled_html += render('templates/unscheduled_prelim.pt', {
             'event': event,
@@ -271,6 +272,7 @@ def conf_view(request):
             'deleteable': True,
             'student': prelim.student_uniqname,
             'fac': f,
+            'paper_url': None,
             }, request = request)
 
 
@@ -297,14 +299,22 @@ def add_prelim(request):
         f1 = DBSession.query(Faculty).filter_by(uniqname=request.POST['faculty1']).one()
         f2 = DBSession.query(Faculty).filter_by(uniqname=request.POST['faculty2']).one()
         f3 = DBSession.query(Faculty).filter_by(uniqname=request.POST['faculty3']).one()
+        f4 = DBSession.query(Faculty).filter_by(uniqname=request.POST['faculty4']).one()
         log.debug('queried all faculty successfully')
+
+        try:
+            title = request.POST['title']
+        except KeyError:
+            title = None
 
         prelim = PrelimAssignment(
                 event_id=event.id,
                 student_uniqname=request.POST['student'],
+                title=title,
                 faculty1=f1.id,
                 faculty2=f2.id,
                 faculty3=f3.id,
+                faculty4=f4.id,
                 )
         DBSession.add(prelim)
         log.debug('added prelim successfully')
@@ -317,7 +327,8 @@ def add_prelim(request):
             'prelim': prelim,
             'deleteable': True,
             'student': prelim.student_uniqname,
-            'fac': (f1.uniqname, f2.uniqname, f3.uniqname),
+            'fac': (f1.uniqname, f2.uniqname, f3.uniqname, f4.uniqname),
+            'paper_url': None,
             }, request = request)
         log.debug('rendered new prelim html')
 
@@ -327,14 +338,13 @@ def add_prelim(request):
     except KeyError:
         DBSession.rollback()
         return {'success': False, 'event_id': event.id,
-                'msg': 'Missing a key. (Must input a student name and all three faculty)'}
+                'msg': 'Missing a key. (Must input a student name and all faculty)'}
 
     except IntegrityError as e:
         DBSession.rollback()
         return {'success': False, 'event_id': event.id,
                 'msg': "Something's duplicated. You can only schedule one prelim"
-                " per student and must have three distinct faculty for each"
-                " student."}
+                " per student and must have distinct faculty for each selection."}
 
     except:
         DBSession.rollback()
@@ -551,13 +561,37 @@ def calendar_view(request):
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname)
             f.sort()
-            unscheduled_html += render('templates/unscheduled_prelim.pt', {
+            unscheduled_html += render('templates/unscheduled_prelim_panel.pt', {
             'event': event,
             'prelim': prelim,
             'deleteable': False,
             'student': prelim.student_uniqname,
             'fac': f,
+            'paper_url': None,
+            }, request = request)
+
+        alternates = DBSession.query(PrelimAssignment).\
+                filter(PrelimAssignment.event_id==event.id).\
+                filter(PrelimAssignment.times==None).\
+                filter(PrelimAssignment.faculty4==fid).\
+                order_by(PrelimAssignment.student_uniqname)
+        alternates_html = ''
+        for prelim in alternates.all():
+            f = []
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
+            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname)
+            f.sort()
+            alternates_html += render('templates/unscheduled_prelim_panel.pt', {
+            'event': event,
+            'prelim': prelim,
+            'deleteable': False,
+            'student': prelim.student_uniqname,
+            'fac': f,
+            'paper_url': None,
             }, request = request)
 
         events_html += render('templates/cal_event.pt', {
@@ -565,6 +599,7 @@ def calendar_view(request):
             'event_cal': cal,
             'prelims': prelims_html,
             'unscheduled': unscheduled_html,
+            'alternates': alternates_html,
             }, request = request)
 
     try:

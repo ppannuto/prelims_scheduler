@@ -9,7 +9,7 @@
     </div>
     <div id="event_${event.id}_body" class="panel-collapse collapse in">
       <div class="panel-body">
-        <div id="event_${event.id}_panel_body">
+        <div id="event_${event.id}_panel_body" class="row">
           <div class="col-lg-6">
             <div id="event_${event.id}_cal">
               ${structure: event_cal}
@@ -48,11 +48,35 @@
                 <div class="panel-collapse collapse in" id="event_${event.id}_unscheduled_body">
                   <div class="panel-body">
                     <div tal:condition="unscheduled">
-                      <div class="container">
-                        ${structure: unscheduled}
-                      </div>
+                      ${structure: unscheduled}
                     </div>
                     <div tal:condition="not:unscheduled">
+                      <p><i>You currently have no unscheduled prelims assigned to you.</i></p>
+                      <p>Any prelims assigned to you that have not yet been scheduled
+                      will appear in this area.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-success" id="event_${event.id}_alternates">
+                <div class="panel-heading clickable"
+                  data-toggle="collapse"
+                  data-parent="#event_${event.id}_alternates"
+                  data-target="#event_${event.id}_alternates_body"
+                  >
+                  Unscheduled prelims you are the alternate for
+                </div>
+                <div class="panel-collapse collapse in" id="event_${event.id}_alternates_body">
+                  <div class="panel-body">
+                    <div>
+                      <p>These are the prelims you are listed as the alternate for.
+                      Most likely, you will not be assigned these prelims unless there
+                      is no meeting time that works for the three assigned faculty.</p>
+                    </div>
+                    <div tal:condition="alternates">
+                      ${structure: alternates}
+                    </div>
+                    <div tal:condition="not:alternates">
                       <p><i>You currently have no unscheduled prelims assigned to you.</i></p>
                       <p>Any prelims assigned to you that have not yet been scheduled
                       will appear in this area.</p>

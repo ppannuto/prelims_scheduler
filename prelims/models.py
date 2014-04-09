@@ -8,6 +8,7 @@ from sqlalchemy import (
     Date,
     Time,
     ForeignKey,
+    Text,
     )
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -96,24 +97,28 @@ class PrelimAssignment(Base):
     id = Column(Integer, primary_key=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     student_uniqname = Column(String(8), nullable=False)
+    title = Column(Text)
 
+    # Faculty 1-3 are the preferred faculty, faculty4 is the alternate
     faculty1 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
     faculty2 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
     faculty3 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
+    faculty4 = Column(Integer, ForeignKey("faculty.id"), nullable=False)
 
     __table_args__ = (
             UniqueConstraint('event_id', 'student_uniqname'),
             CheckConstraint('faculty1 != faculty2'),
             CheckConstraint('faculty2 != faculty3'),
-            CheckConstraint('faculty1 != faculty3'),
+            CheckConstraint('faculty3 != faculty4'),
+            CheckConstraint('faculty1 != faculty4'),
             )
 
     times = relationship("TimeSlot", backref='prelim',
             cascade='all, delete, delete-orphan')
 
     def __repr__(self):
-        return "<PrelimAssignment(id='{0}', event_id='{1}', student_uniqname='{2}', faculty1='{3}', faculty2='{4}', faculty3='{5}')>".format(
-                self.id, self.event_id, self.student_uniqname, self.faculty1, self.faculty2, self.faculty3)
+        return "<PrelimAssignment(id='{0}', event_id='{1}', student_uniqname='{2}', faculty1='{3}', faculty2='{4}', faculty3='{5}', faculty4='{6}')>".format(
+                self.id, self.event_id, self.student_uniqname, self.faculty1, self.faculty2, self.faculty3, self.faculty4)
 
 #class Meeting(Base):
 #    __tablename__ = 'meetings'
