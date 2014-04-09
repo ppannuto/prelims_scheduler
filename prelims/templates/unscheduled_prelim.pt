@@ -11,6 +11,7 @@
     </div>
     <label class="col-lg-1"><strong>${student}</strong></label>
     <div tal:repeat="f fac" tal:content="f" class="col-lg-1"></div>
+    <div tal:content="f_alt" class="col-lg-1" style="color: grey;"></div>
     <div tal:condition="not:deleteable" class="col-lg-1"></div>
     <div class=" col-lg-5">
       <em><p style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" tal:content="prelim.title" /></em>

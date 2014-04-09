@@ -264,14 +264,15 @@ def conf_view(request):
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
-            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname)
             f.sort()
+            f_alt = DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname
             unscheduled_html += render('templates/unscheduled_prelim.pt', {
             'event': event,
             'prelim': prelim,
             'deleteable': True,
             'student': prelim.student_uniqname,
             'fac': f,
+            'f_alt': f_alt,
             'paper_url': None,
             }, request = request)
 
@@ -561,14 +562,15 @@ def calendar_view(request):
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
-            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname)
             f.sort()
+            f_alt = DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname
             unscheduled_html += render('templates/unscheduled_prelim_panel.pt', {
             'event': event,
             'prelim': prelim,
             'deleteable': False,
             'student': prelim.student_uniqname,
             'fac': f,
+            'f_alt': f_alt,
             'paper_url': None,
             }, request = request)
 
@@ -583,14 +585,15 @@ def calendar_view(request):
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty2).one().uniqname)
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
-            f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname)
             f.sort()
+            f_alt = DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname
             alternates_html += render('templates/unscheduled_prelim_panel.pt', {
             'event': event,
             'prelim': prelim,
             'deleteable': False,
             'student': prelim.student_uniqname,
             'fac': f,
+            'f_alt': f_alt,
             'paper_url': None,
             }, request = request)
 
