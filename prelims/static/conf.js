@@ -1,6 +1,13 @@
+/* Global jQuery options */
+
+/* setup bootstrap-editable for inline edits */
+$.fn.editable.defaults.mode = 'inline';
+
 $(document).ready(function() {
+  /* Make default faculty selection blank */
   $(".schedule_faculty").prop('selectedIndex', -1);
 
+  /* Setup AJAX form for adding new prelims */
   var add_prelim_form_options = {
     success:    add_prelim_form_success,
     clearForm:  true,
@@ -9,6 +16,20 @@ $(document).ready(function() {
   $(".add_prelim_form").ajaxForm(add_prelim_form_options);
 
   add_delete_form_hooks();
+
+  /* Setup editable fields for prelims */
+  $('.prelim_title').editable({
+    success: function(response, newValue) {
+      if (response.status == 'error') return response.msg;
+    },
+    error: function(response, newValue) {
+      if (response.status === 500) {
+        return 'Temporary server error. Please try again later.';
+      } else {
+        return response.responseText;
+      }
+    }
+  });
 });
 
 function add_delete_form_hooks() {

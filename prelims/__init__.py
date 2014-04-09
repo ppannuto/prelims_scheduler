@@ -23,6 +23,7 @@ def main(global_config, **settings):
     config.add_route('logout', '/logout')
     config.add_route('conf', '/conf.html')
     config.add_route('add_prelim', '/add_prelim')
+    config.add_route('update_prelim_title', '/update_prelim_title')
     config.add_route('delete_unscheduled_prelim', '/delete_unscheduled_prelim')
     config.add_route('new_event', '/new_event')
     config.add_route('save_event', '/save_event')

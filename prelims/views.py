@@ -352,6 +352,13 @@ def add_prelim(request):
         return {'success': False, 'event_id': event.id,
                 'msg': 'Could not add this prelim. Unknown error?'}
 
+@view_config(route_name='update_prelim_title', request_method='POST', renderer='json')
+def update_prelim_title(request):
+    log.debug(request.POST.mixed())
+    prelim = DBSession.query(PrelimAssignment).filter_by(id=request.POST['pk']).one()
+    prelim.title = request.POST['value']
+    return {'status': 'success'}
+
 @view_config(route_name='delete_unscheduled_prelim', request_method='POST', renderer='json')
 def delete_unscheduled_prelim(request):
     log.debug(request.POST.mixed())

@@ -10,6 +10,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="/static/bootstrap-3.1.1-dist/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
     <link href="/static/datepicker/css/datepicker.css" rel="stylesheet">
 
     <link href="/static/support.css" rel="stylesheet">
@@ -38,6 +39,7 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="/static/bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
+    <script src="/static/bootstrap3-editable/js/bootstrap-editable.js"></script>
     <script src="/static/jquery.form.min.js"></script>
     <script src="/static/datepicker/js/bootstrap-datepicker.js"></script>
     <script src="/static/support.js"></script>
