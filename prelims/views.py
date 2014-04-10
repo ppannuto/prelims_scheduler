@@ -328,7 +328,8 @@ def add_prelim(request):
             'prelim': prelim,
             'deleteable': True,
             'student': prelim.student_uniqname,
-            'fac': (f1.uniqname, f2.uniqname, f3.uniqname, f4.uniqname),
+            'fac': (f1.uniqname, f2.uniqname, f3.uniqname),
+            'f_alt': f4.uniqname,
             'paper_url': None,
             }, request = request)
         log.debug('rendered new prelim html')
