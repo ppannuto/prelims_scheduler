@@ -1,4 +1,7 @@
-from pyramid.response import Response
+from pyramid.response import (
+        Response,
+        FileResponse,
+        )
 from pyramid.renderers import render
 from pyramid.request import Request
 from pyramid.view import view_config
@@ -24,6 +27,7 @@ from .models import (
 import logging
 log = logging.getLogger(__name__)
 
+import os
 import datetime
 import nptime
 import time
@@ -214,6 +218,11 @@ def render_prelims(DBSession, event, query):
             }, request = request)
     return prelims_html
 
+def get_paper_url(prelim):
+    paper_url = os.path.join('prelims', 'pdfs', prelim.student_uniqname+'.pdf')
+    if not os.path.exists(paper_url):
+        return None
+    return os.path.join('pdfs', prelim.student_uniqname+'.pdf')
 
 @view_config(route_name='conf', renderer='templates/conf.pt')
 def conf_view(request):
@@ -273,7 +282,7 @@ def conf_view(request):
             'student': prelim.student_uniqname,
             'fac': f,
             'f_alt': f_alt,
-            'paper_url': None,
+            'paper_url': get_paper_url(prelim),
             }, request = request)
 
 
@@ -330,7 +339,7 @@ def add_prelim(request):
             'student': prelim.student_uniqname,
             'fac': (f1.uniqname, f2.uniqname, f3.uniqname),
             'f_alt': f4.uniqname,
-            'paper_url': None,
+            'paper_url': get_paper_url(prelim),
             }, request = request)
         log.debug('rendered new prelim html')
 
@@ -359,6 +368,44 @@ def update_prelim_title(request):
     prelim = DBSession.query(PrelimAssignment).filter_by(id=request.POST['pk']).one()
     prelim.title = request.POST['value']
     return {'status': 'success'}
+
+@view_config(route_name='update_prelim_pdf', request_method='POST', renderer='json')
+def update_prelim_pdf(request):
+    log.debug(request.POST.mixed())
+    log.debug(request.POST['file_obj'])
+    log.debug(request.POST['file_obj'].file)
+    log.debug(request.POST['file_obj'].filename)
+
+    event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
+    prelim = DBSession.query(PrelimAssignment).filter_by(id=request.POST['prelim_id']).one()
+    file_path = os.path.join('prelims', 'pdfs', prelim.student_uniqname + '.pdf')
+    temp_path = file_path + '~'
+
+    input_file = request.POST['file_obj'].file
+
+    o = open(temp_path, 'wb')
+    input_file.seek(0)
+    while True:
+        data = input_file.read(2<<16)
+        if not data:
+            break
+        o.write(data)
+
+    o.close()
+    os.rename(temp_path, file_path)
+    return {'status': 'success', 'event_id': event.id, 'prelim_id': prelim.id,
+            'msg': 'success',
+            'url': '/pdfs/{0}.pdf'.format(prelim.student_uniqname),
+            'text': '{0}.pdf'.format(prelim.student_uniqname),
+            }
+
+@view_config(route_name='get_prelim_pdf')
+def get_prelim_pdf(request):
+    response = FileResponse(
+            os.path.join('prelims', 'pdfs', request.matchdict['uniq'] + '.pdf'),
+            request=request,
+            )
+    return response
 
 @view_config(route_name='delete_unscheduled_prelim', request_method='POST', renderer='json')
 def delete_unscheduled_prelim(request):
@@ -565,6 +612,7 @@ def calendar_view(request):
                 filter((PrelimAssignment.faculty1==fid)|(PrelimAssignment.faculty2==fid)|(PrelimAssignment.faculty3==fid)).\
                 order_by(PrelimAssignment.student_uniqname)
         unscheduled_html = ''
+
         for prelim in unscheduled.all():
             f = []
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty1).one().uniqname)
@@ -572,6 +620,7 @@ def calendar_view(request):
             f.append(DBSession.query(Faculty).filter_by(id=prelim.faculty3).one().uniqname)
             f.sort()
             f_alt = DBSession.query(Faculty).filter_by(id=prelim.faculty4).one().uniqname
+
             unscheduled_html += render('templates/unscheduled_prelim_panel.pt', {
             'event': event,
             'prelim': prelim,
@@ -579,7 +628,7 @@ def calendar_view(request):
             'student': prelim.student_uniqname,
             'fac': f,
             'f_alt': f_alt,
-            'paper_url': None,
+            'paper_url': get_paper_url(prelim),
             }, request = request)
 
         alternates = DBSession.query(PrelimAssignment).\
@@ -602,7 +651,7 @@ def calendar_view(request):
             'student': prelim.student_uniqname,
             'fac': f,
             'f_alt': f_alt,
-            'paper_url': None,
+            'paper_url': get_paper_url(prelim),
             }, request = request)
 
         events_html += render('templates/cal_event.pt', {

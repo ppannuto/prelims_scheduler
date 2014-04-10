@@ -39,3 +39,14 @@ $(".cal_watch_check").change(function() {
     }
   });
 });
+
+$(document).on('change', '.btn-file :file', function() {
+  console.log('on change btn file');
+  var input = $(this);
+  var numFiles = input.get(0).files ? input.get(0).files.length : 1;
+  var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+  console.log(input);
+  console.log(numFiles);
+  console.log(label);
+  input.trigger('fileselect', [numFiles, label]);
+});
