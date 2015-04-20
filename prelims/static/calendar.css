@@ -25,6 +25,10 @@ td.busy_time_slot {
   background-color: #f00;
 }
 
+td.free_time_slot {
+  background-color: #0f0;
+}
+
 td.disable_time_slot {
   color: #fff;
   background-color: #fff;

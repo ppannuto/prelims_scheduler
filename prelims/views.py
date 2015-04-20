@@ -112,8 +112,12 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
     #log.debug('Full week html: >>>{0}<<<'.format(week_html))
     return week_html
 
-def render_event(event, uniqname=None, blackout_as_busy=False):
+def render_event(event, uniqname=None, render_free=False, blackout_as_busy=False):
     """Helper function that builds an HTML table for an event"""
+
+    if render_free:
+        assert uniqname != None
+        assert blackout_as_busy == False
 
     start_time = nptime.nptime.from_time(event.start_time)
     end_time = nptime.nptime.from_time(event.end_time)
@@ -144,9 +148,11 @@ def render_event(event, uniqname=None, blackout_as_busy=False):
                                 filter_by(time_slot=t)
                         try:
                             exists.one()
-                            cls += ' busy_time_slot'
+                            if not render_free:
+                                cls += ' busy_time_slot'
                         except NoResultFound:
-                            pass
+                            if render_free:
+                                cls += ' free_time_slot'
 
                     exists = DBSession.query(TimeSlot).\
                             filter_by(event_id=event.id).\
@@ -602,7 +608,7 @@ def delete_event(request):
 
     return HTTPFound(location='/conf.html')
 
-@view_config(route_name='calendar', renderer='templates/calendar.pt')
+@view_config(route_name='calendar', renderer='templates/calendar-mark-free.pt')
 def calendar_view(request):
     try:
         uniqname = request.session['uniqname']
@@ -610,7 +616,7 @@ def calendar_view(request):
         return HTTPFound(location='/login.html')
     events_html = ''
     for event in DBSession.query(Event).order_by(Event.id).filter_by(active=True):
-        cal = render_event(event, uniqname=uniqname)
+        cal = render_event(event, uniqname=uniqname, render_free=True)
 
         q = DBSession.query(PrelimAssignment).join(TimeSlot).\
                 filter(TimeSlot.uniqname==uniqname)
