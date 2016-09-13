@@ -50,7 +50,7 @@
         </div>
         -->
         <span class="file-input btn btn-primary btn-file upload_prelim_pdf">
-          Upload new pdf <input type="file" name="file_obj">
+          Upload pdf <input type="file" name="file_obj">
         </span>
         <input type="hidden" name="event_id" value="${event.id}" />
         <input type="hidden" name="prelim_id" value="${prelim.id}" />
