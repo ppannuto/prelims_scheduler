@@ -10,15 +10,6 @@
     <p>Please mark when you <strong>are available</strong>. You can "paint"
     over time slots by clicking and dragging with the mouse.<p>
 
-    <p>By marking the time, you are committing to being available for that time slot.
-    You can come back and edit your availability as often as you like.</p>
-
-    <p>You will receive an email with a prelim time/date,
-    please note that the prelim information is not updated to the scheduler.</p>
-
-    <p>PLEASE NOTE THAT WE ARE MAKING A CHANGE AND ASKING YOU TO MARK
-    <strong>AVAILABLE</strong> TIME SLOTS.</p>
-
     <div class="well">
       <div style="overflow: hidden;">
         <p class="btn" style="float: left;">Currently logged in as ${request.session['uniqname']}.</p>
