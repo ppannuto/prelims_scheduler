@@ -22,6 +22,8 @@ def main(global_config, **settings):
     config.add_route('login', '/login.html')
     config.add_route('logout', '/logout')
     config.add_route('conf', '/conf.html')
+    config.add_route('admin_edit_faculty', '/admin/edit_faculty')
+    config.add_route('admin_new_faculty', '/admin/new_faculty')
     config.add_route('add_prelim', '/add_prelim')
     config.add_route('update_prelim_title', '/update_prelim_title')
     config.add_route('update_prelim_pdf', '/update_prelim_pdf')

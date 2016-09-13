@@ -200,7 +200,7 @@ def login_view(request):
     except KeyError:
         return {'why_failed': 'uniqname is required'}
     except NoResultFound:
-        return {'why_failed': 'That uniqname is not a faculty uniqname'}
+        return {'why_failed': uniqname + ' is not a faculty uniqname. If yours is missing, please e-mail Ashley (smash@umich.edu)'}
     return {'why_failed': ''}
 
 @view_config(route_name='logout', request_method='POST')
@@ -318,6 +318,19 @@ def conf_view(request):
         extra_js += busy_js
 
     return {'events':events_html, 'extra_js':extra_js}
+
+@view_config(route_name='admin_edit_faculty', renderer='templates/admin/edit_faculty.pt')
+def admin_edit_faculty(request):
+    faculty = DBSession.query(Faculty).order_by(Faculty.uniqname).all()
+    return {'faculty': faculty}
+
+@view_config(route_name='admin_new_faculty', request_method='POST')
+def admin_new_faculty(request):
+    uniqname = request.POST['uniqname'].strip()
+    if len(uniqname):
+        faculty = Faculty(uniqname=uniqname)
+        DBSession.add(faculty)
+    return HTTPFound(location='/admin/edit_faculty')
 
 @view_config(route_name='add_prelim', request_method='POST', renderer='json')
 def add_prelim(request):

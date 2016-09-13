@@ -95,6 +95,7 @@ class Faculty(Base):
     uniqname = Column(String(8), unique=True)
     name = Column(String(50))
     office = Column(String(50))
+    enabled = Column(Boolean, default=True)
 
     def __repr__(self):
         return "<Faculty(id='{0}', uniqname='{1}', name='{2}', office='{3}')>".format(

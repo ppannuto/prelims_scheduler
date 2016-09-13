@@ -10,6 +10,10 @@
 
     <hr />
 
+    <a href="/admin/edit_faculty"><h2>Edit Faculty List</h2></a>
+
+    <hr />
+
     <div id="conf_new_event">
       <a href="#" onclick='$("#conf_new_form").toggle("slow")'><h2>Create New Event</h2></a>
       <form role="form" class="form-horizontal" id="conf_new_form"
@@ -158,4 +162,3 @@
     </script>
   </div>
 </html>
-
