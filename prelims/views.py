@@ -190,7 +190,7 @@ def render_event(event, uniqname=None, render_free=False, blackout_as_busy=False
 def login_view(request):
     try:
         uniqname = request.GET['uniqname']
-        if uniqname == 'dawnf':
+        if uniqname == 'smash':
             return HTTPFound(location='/conf.html')
         DBSession.query(Faculty).filter_by(uniqname=uniqname).one()
         request.session['uniqname'] = uniqname
