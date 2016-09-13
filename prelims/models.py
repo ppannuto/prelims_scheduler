@@ -68,6 +68,14 @@ class TimeSlot(Base):
 
     time_slot = Column(DateTime, nullable=False)
 
+    # These time slots indicate global busy times
+    mark_global_busy = Column(Boolean, default=False)
+
+    # True => marked busy
+    # False => marked free
+    # null => not marked
+    mark_busy = Column(Boolean)
+
     # uniqname is populated if this is the result from a submitted user, it is
     # blank if this descibes the valid times for the event
     uniqname = Column(String(8))

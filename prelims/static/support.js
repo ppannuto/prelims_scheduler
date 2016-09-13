@@ -17,7 +17,10 @@ $(".valid-if-any-text").on("change", function() {
     console.log(valid_div);
 });
 
+/* TODO: This is available-centric and should be more generic */
+/* TODO: Also, this is a really crappy way of implementing this */
 $(".cal_watch_check").change(function() {
+  console.log(".cal_watch_check onchange for " + this.value);
   /* TODO: This doesn't filter by event_id, but should */
 
   var fn_to_apply;
@@ -27,17 +30,35 @@ $(".cal_watch_check").change(function() {
     fn_to_apply = function(val) { return val - 1; }
   }
 
-  $(".fac_busy_"+this.value).each(function(index) {
-    if (!("busy_cnt" in this)) {
-      this.busy_cnt = 0;
+  $(".fac_free_"+this.value).each(function(index) {
+    if (!("free_cnt" in this)) {
+      this.free_cnt = 0;
     }
-    this.busy_cnt = fn_to_apply(this.busy_cnt);
-    if (this.busy_cnt > 0) {
-      $(this).addClass("busy_time_slot");
+    if (!("unmarked_cnt" in this)) {
+      this.unmarked_cnt = 0;
+    }
+    this.free_cnt = fn_to_apply(this.free_cnt);
+    if ((this.free_cnt > 0) && (this.unmarked_cnt == 0)) {
+      $(this).addClass("free_time_slot");
     } else {
-      $(this).removeClass("busy_time_slot");
+      $(this).removeClass("free_time_slot");
     }
   });
+
+  $(".fac_unmarked_"+this.value).each(function(index) {
+    if (!("free_cnt" in this)) {
+      this.free_cnt = 0;
+    }
+    if (!("unmarked_cnt" in this)) {
+      this.unmarked_cnt = 0;
+    }
+    this.unmarked_cnt = fn_to_apply(this.unmarked_cnt);
+    if ((this.free_cnt > 0) && (this.unmarked_cnt == 0)) {
+      $(this).addClass("free_time_slot");
+    } else {
+      $(this).removeClass("free_time_slot");
+    }
+  })
 });
 
 $(document).on('change', '.btn-file :file', function() {

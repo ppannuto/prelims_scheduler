@@ -9,12 +9,12 @@
     </div>
     <div id="event_${event.id}_body" class="panel-collapse collapse in">
       <div class="panel-body">
-        <!-- <input type="checkbox" ${'checked' if event.active else ''}> Active -->
-        <label class="col-sm-2">Start Date:</label><p class="col-sm-10">${start}</p>
-        <label class="col-sm-2">  End Date:</label><p class="col-sm-10">  ${end}</p>
+        <dl class="dl-horizontal">
+          <dt>Start Date:</dt><dd>${start}</dd>
+          <dt>End Date:</dt><dd>${end}</dd>
+        </dl>
 
-        <!-- I have some bootstrap issue, I don't know what, but this fixes it for now at least -->
-        <button class="btn"></button>
+        <hr />
 
         <div id="event_${event.id}_cal">
           <div class="panel panel-default">
@@ -23,7 +23,7 @@
               data-parent="#event_${event.id}_cal"
               data-target="#event_${event.id}_cal_body"
               >
-              In-depth calendar view
+              Click to browse faculty calendars
             </div>
             <div id="event_${event.id}_cal_body" class="panel-collapse collapse">
               <div class="panel-body">
@@ -38,7 +38,7 @@
                     will appear in this list.</p>
                     <p>If you select multiple faculty, the calendar will show
                     when all of the selected faculty are free.</p>
-                    <label class="checkbox-inline" tal:repeat="fac can_schedule">
+                    <label class="checkbox-inline" tal:repeat="fac any_response">
                       <input type="checkbox" class="btn cal_watch_check" name="fac_cb"
                         tal:attributes="value fac" tal:content="fac">
                     </label>
@@ -48,7 +48,7 @@
               <div class="panel-footer">
                 <form role="form" action="/edit_event" method="post">
                   <input type="hidden" name="event_id" value="${event.id}">
-                  <button type="submit" class="btn btn-default">Edit blackout times</button>
+                  <button type="submit" class="btn btn-default" disabled>Edit blackout times (not implemented currently)</button>
                 </form>
               </div>
             </div>

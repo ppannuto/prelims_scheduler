@@ -43,27 +43,23 @@
       function validate_and_add_available_times() {
         var free_times = '';
         var busy_times = '';
-        $("td.ts_changed").each(function(index) {
+        var unmarked_times = '';
+        $("td.time_slot").each(function(index) {
           if (cal_is_free(this)) {
-            if (!this.was_free) {
-              free_times += $(this).attr("id") + " ";
-            }
+            free_times += $(this).attr("id") + " ";
           } else if (cal_is_busy(this)) {
-            if (this.was_free) {
-              busy_times += $(this).attr("id") + " ";
-            }
+            busy_times += $(this).attr("id") + " ";
+          } else {
+            unmarked_times += $(this).attr("id") + " ";
           }
         });
         $('<input />').attr('type', 'hidden').attr('name', 'free_times').attr('value', free_times).appendTo('#available_times_form');
         $('<input />').attr('type', 'hidden').attr('name', 'busy_times').attr('value', busy_times).appendTo('#available_times_form');
+        $('<input />').attr('type', 'hidden').attr('name', 'unmarked_times').attr('value', unmarked_times).appendTo('#available_times_form');
 
         console.log("free_times: >>>" + free_times + "<<<");
         console.log("busy_times: >>>" + busy_times + "<<<");
-        /*
-        if (busy_times.length == 0) {
-          return confirm("You are really available for every time slot?");
-        }
-        */
+        console.log("unmarked_times: >>> " + unmarked_times + "<<<");
         return true;
       }
 

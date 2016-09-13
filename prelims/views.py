@@ -35,6 +35,10 @@ import time
 def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
         interval_in_minutes, show_weekends=False):
     """Helper function that converts a date range to a series of HTML tables"""
+    log.debug("render_date_range_to_weeks start_date={} end_date={} start_time={} end_time={} intrvl={} show_wknd={}".format(
+        start_date, end_date, start_time, end_time, interval_in_minutes, show_weekends
+    ))
+
     start = datetime.date(*map(int, start_date.split('-')))
     end   = datetime.date(*map(int,   end_date.split('-')))
 
@@ -112,12 +116,11 @@ def render_date_range_to_weeks(start_date, end_date, start_time, end_time,
     #log.debug('Full week html: >>>{0}<<<'.format(week_html))
     return week_html
 
-def render_event(event, uniqname=None, render_free=False, blackout_as_busy=False):
+def render_event(event, uniqname=None, blackout_as_busy=False):
     """Helper function that builds an HTML table for an event"""
-
-    if render_free:
-        assert uniqname != None
-        assert blackout_as_busy == False
+    log.debug('render_event event={} uniq={} blackout_as_busy={}'.format(
+        event, uniqname, blackout_as_busy
+    ))
 
     start_time = nptime.nptime.from_time(event.start_time)
     end_time = nptime.nptime.from_time(event.end_time)
@@ -125,7 +128,7 @@ def render_event(event, uniqname=None, render_free=False, blackout_as_busy=False
     weeks_html = ''
     monday = event.start_date - datetime.timedelta(days=event.start_date.weekday())
     while monday < event.end_date:
-        friday = monday + datetime.timedelta(days=5)
+        friday = monday + datetime.timedelta(days=4)
         week_str = 'Week of {0} to {1}'.format(
                 monday.strftime('%b %e'), friday.strftime('%b %e'))
 
@@ -140,28 +143,27 @@ def render_event(event, uniqname=None, render_free=False, blackout_as_busy=False
                 if t.date() < event.start_date or t.date() > event.end_date:
                     cls += ' disable_time_slot'
                 else:
-                    if uniqname != None:
-                        exists = DBSession.query(TimeSlot).\
-                                filter_by(event_id=event.id).\
-                                filter_by(uniqname=uniqname).\
-                                filter_by(prelim_id=None).\
-                                filter_by(time_slot=t)
-                        try:
-                            exists.one()
-                            if not render_free:
-                                cls += ' busy_time_slot'
-                        except NoResultFound:
-                            if render_free:
-                                cls += ' free_time_slot'
-
-                    exists = DBSession.query(TimeSlot).\
+                    common_query = DBSession.query(TimeSlot).\
                             filter_by(event_id=event.id).\
-                            filter_by(uniqname=None).\
                             filter_by(prelim_id=None).\
                             filter_by(time_slot=t)
-                    try:
-                        exists.one()
-                    except NoResultFound:
+
+                    if common_query.\
+                            filter_by(uniqname=uniqname).\
+                            filter_by(mark_busy=True).\
+                            count() > 0:
+                        cls += ' busy_time_slot'
+
+                    if common_query.\
+                            filter_by(uniqname=uniqname).\
+                            filter(TimeSlot.mark_busy.is_(False)).\
+                            count() > 0:
+                        cls += ' free_time_slot'
+
+                    if common_query.\
+                            filter_by(uniqname=None).\
+                            filter_by(mark_global_busy=True).\
+                            count() > 0:
                         if blackout_as_busy:
                             cls += ' busy_time_slot'
                         else:
@@ -255,27 +257,24 @@ def conf_view(request):
         cal = render_event(event)
 
         busy_js = ''
-        can_schedule = []
         no_results = []
         all_faculty = [f.uniqname for f in DBSession.query(Faculty).order_by(Faculty.uniqname)]
 
+        any_response = set()
+
         for faculty in DBSession.query(Faculty).order_by(Faculty.uniqname):
-            try:
-                busy = DBSession.query(TimeSlot).join(Event).\
-                        filter(Event.id==event.id).\
-                        filter(TimeSlot.uniqname==faculty.uniqname).all()
-                if len(busy) == 0:
-                    raise NoResultFound
-                for t in busy:
-                    busy_js += '$("#ts_{0}_{1}_{2}").addClass("fac_busy_{3}");\n'.format(
-                            event.id,
-                            t.time_slot.strftime('%Y-%m-%d'),
-                            t.time_slot.strftime('%H-%M'),
-                            faculty.uniqname,
-                            )
-                can_schedule.append(faculty.uniqname)
-            except NoResultFound:
-                no_results.append(faculty.uniqname)
+            for time_slot in DBSession.query(TimeSlot).join(Event).\
+                    filter(Event.id==event.id).\
+                    filter(TimeSlot.uniqname==faculty.uniqname).all():
+                busy_js += '$("#ts_{}_{}_{}").addClass("fac_{}_{}");\n'.format(
+                        event.id,
+                        time_slot.time_slot.strftime('%Y-%m-%d'),
+                        time_slot.time_slot.strftime('%H-%M'),
+                        "busy" if time_slot.mark_busy == True else "free" if time_slot.mark_busy == False else "unmarked",
+                        faculty.uniqname,
+                        )
+                if time_slot.mark_busy is not None:
+                    any_response.add(faculty.uniqname)
 
         q = DBSession.query(PrelimAssignment).\
                 filter(PrelimAssignment.times!=None).\
@@ -313,8 +312,8 @@ def conf_view(request):
             'prelims': prelims_html,
             'unscheduled': unscheduled_html,
             'all_faculty': all_faculty,
-            'can_schedule': can_schedule,
-            'no_results': no_results,
+            'any_response': any_response,
+            'no_results': set(all_faculty) - any_response,
             }, request = request)
         extra_js += busy_js
 
@@ -507,9 +506,10 @@ def save_event(request):
         stime = datetime.datetime(syear, smonth, sday, shour, smin)
         etime = datetime.datetime(eyear, emonth, eday, ehour, emin)
         while stime < etime:
-            if stime not in blackouts:
-                time_slot = TimeSlot(event_id=event.id, time_slot=stime)
-                DBSession.add(time_slot)
+            time_slot = TimeSlot(event_id=event.id, time_slot=stime)
+            if stime in blackouts:
+                time_slot.mark_global_busy = True
+            DBSession.add(time_slot)
 
             # n.b. if custom time ranges are allowed, this should be modified to
             # avoid wraparound end -> start over long time_slot_size's
@@ -539,6 +539,7 @@ def edit_event(request):
 
 @view_config(route_name='update_event', request_method='POST')
 def update_event(request):
+    raise NotImplementedError("TODO: Fix for db update")
     log.debug(request.POST.mixed())
     event = DBSession.query(Event).filter_by(id=request.POST['event_id']).one()
 
@@ -619,7 +620,7 @@ def calendar_view(request):
         return HTTPFound(location='/login.html')
     events_html = ''
     for event in DBSession.query(Event).order_by(Event.id).filter_by(active=True):
-        cal = render_event(event, uniqname=uniqname, render_free=True)
+        cal = render_event(event, uniqname=uniqname)
 
         q = DBSession.query(PrelimAssignment).join(TimeSlot).\
                 filter(TimeSlot.uniqname==uniqname)
@@ -695,42 +696,62 @@ def calendar_view(request):
 
 @view_config(route_name="update_times", request_method='POST')
 def update_times(request):
+    def find_or_make_time_slot(event_id, uniqname, ts):
+        try:
+            time_slot = DBSession.query(TimeSlot).\
+                    filter_by(event_id=event_id).\
+                    filter_by(uniqname=uniqname).\
+                    filter_by(time_slot=ts).\
+                    one()
+        except NoResultFound:
+            time_slot = TimeSlot(event_id=event_id, time_slot=ts, uniqname=uniqname)
+            DBSession.add(time_slot)
+        return time_slot
+
     try:
         log.debug(request.POST.mixed())
 
-        # Add entries for blacked out times
-        day_ids = {}
+        uniqname = request.session['uniqname']
 
-        for new_busy in request.POST['busy_times'].split():
-            ts, event_id, date, time = new_busy.split('_')
+        for busy in request.POST['busy_times'].split():
+            ts, event_id, date, time = busy.split('_')
             date = datetime.date(*map(int, date.split('-')))
             time = datetime.time(*map(int, time.split('-')))
             ts = datetime.datetime.combine(date, time)
 
-            time_slot = TimeSlot(
-                    event_id=event_id,
-                    uniqname=request.session['uniqname'],
-                    time_slot=ts,
-                    )
-            DBSession.add(time_slot)
+            time_slot = find_or_make_time_slot(event_id, uniqname, ts)
 
-        for new_free in request.POST['free_times'].split():
-            ts, event_id, date, time = new_free.split('_')
-            date = datetime.date(*map(int, date.split('-')))
-            time = datetime.time(*map(int, time.split('-')))
-            ts = datetime.datetime.combine(date, time)
-
-            ts = DBSession.query(TimeSlot).join(Event).\
-                    filter(Event.id==event_id).\
-                    filter(TimeSlot.uniqname==request.session['uniqname']).\
-                    filter(TimeSlot.time_slot==ts).\
-                    one()
-
-            if ts.prelim_id != None:
+            if time_slot.prelim_id != None:
                 # Someone got cute and circumvented to JS to try to delete a
                 # scheduled meeting, reject that
                 raise ValueError("Attempt to delete scheduled meeting")
-            DBSession.delete(ts)
+
+            time_slot.mark_busy = True
+
+        for unmarked in request.POST['busy_times'].split():
+            ts, event_id, date, time = unmarked.split('_')
+            date = datetime.date(*map(int, date.split('-')))
+            time = datetime.time(*map(int, time.split('-')))
+            ts = datetime.datetime.combine(date, time)
+
+            time_slot = find_or_make_time_slot(event_id, uniqname, ts)
+
+            if time_slot.prelim_id != None:
+                # Someone got cute and circumvented to JS to try to delete a
+                # scheduled meeting, reject that
+                raise ValueError("Attempt to delete scheduled meeting")
+
+            time_slot.mark_busy = None
+
+        for free in request.POST['free_times'].split():
+            ts, event_id, date, time = free.split('_')
+            date = datetime.date(*map(int, date.split('-')))
+            time = datetime.time(*map(int, time.split('-')))
+            ts = datetime.datetime.combine(date, time)
+
+            time_slot = find_or_make_time_slot(event_id, uniqname, ts)
+
+            time_slot.mark_busy = False
     except:
         DBSession.rollback()
         log.debug("Rolled back DB")
