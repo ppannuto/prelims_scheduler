@@ -108,9 +108,11 @@ class PrelimAssignment(Base):
     __table_args__ = (
             UniqueConstraint('event_id', 'student_uniqname'),
             CheckConstraint('faculty1 != faculty2'),
-            CheckConstraint('faculty2 != faculty3'),
-            CheckConstraint('faculty3 != faculty4'),
+            CheckConstraint('faculty1 != faculty3'),
             CheckConstraint('faculty1 != faculty4'),
+            CheckConstraint('faculty2 != faculty3'),
+            CheckConstraint('faculty2 != faculty4'),
+            CheckConstraint('faculty3 != faculty4'),
             )
 
     times = relationship("TimeSlot", backref='prelim',
