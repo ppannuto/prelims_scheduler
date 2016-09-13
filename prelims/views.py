@@ -257,6 +257,8 @@ def conf_view(request):
         busy_js = ''
         can_schedule = []
         no_results = []
+        all_faculty = [f.uniqname for f in DBSession.query(Faculty).order_by(Faculty.uniqname)]
+
         for faculty in DBSession.query(Faculty).order_by(Faculty.uniqname):
             try:
                 busy = DBSession.query(TimeSlot).join(Event).\
@@ -310,6 +312,7 @@ def conf_view(request):
             'event_cal': cal,
             'prelims': prelims_html,
             'unscheduled': unscheduled_html,
+            'all_faculty': all_faculty,
             'can_schedule': can_schedule,
             'no_results': no_results,
             }, request = request)
@@ -838,7 +841,7 @@ Pyramid is having a problem using your SQL database.  The problem
 might be caused by one of the following things:
 
 1.  You may need to run the "initialize_prelims_db" script
-    to initialize your database tables.  Check your virtual 
+    to initialize your database tables.  Check your virtual
     environment's "bin" directory for this script and try to run it.
 
 2.  Your database server may not be running.  Check that the
@@ -848,4 +851,3 @@ might be caused by one of the following things:
 After you fix the problem, please restart the Pyramid application to
 try it again.
 """
-

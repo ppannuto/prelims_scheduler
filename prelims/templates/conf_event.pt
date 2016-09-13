@@ -121,28 +121,28 @@
                       <label for="event_${event.id}_faculty1" class="col-xs-1 control-label">Faculty:</label>
                       <div class="col-xs-2">
                         <select class="form-control schedule_faculty" name="faculty1">
-                          <option tal:repeat="fac can_schedule"
+                          <option tal:repeat="fac all_faculty"
                             tal:attributes="value fac" tal:content="fac" />
                         </select>
                       </div>
                       <label for="event_${event.id}_faculty2" class="col-xs-1 control-label">Faculty:</label>
                       <div class="col-xs-2">
                         <select class="form-control schedule_faculty" name="faculty2">
-                          <option tal:repeat="fac can_schedule"
+                          <option tal:repeat="fac all_faculty"
                             tal:attributes="value fac" tal:content="fac" />
                         </select>
                       </div>
                       <label for="event_${event.id}_faculty3" class="col-xs-1 control-label">Faculty:</label>
                       <div class="col-xs-2">
                         <select class="form-control schedule_faculty" name="faculty3">
-                          <option tal:repeat="fac can_schedule"
+                          <option tal:repeat="fac all_faculty"
                             tal:attributes="value fac" tal:content="fac" />
                         </select>
                       </div>
                       <label for="event_${event.id}_faculty4" class="col-xs-1 control-label">Alternate:</label>
                       <div class="col-xs-2">
                         <select class="form-control schedule_faculty" name="faculty4">
-                          <option tal:repeat="fac can_schedule"
+                          <option tal:repeat="fac all_faculty"
                             tal:attributes="value fac" tal:content="fac" />
                         </select>
                       </div>
