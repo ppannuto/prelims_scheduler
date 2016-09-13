@@ -90,6 +90,7 @@
                   <div id="event_${event.id}_unscheduled_entries">
                     ${structure: unscheduled}
                   </div>
+                  <!--
                   <div class="row col-xs-12">
                     <form role="form"
                       action="/schedule_unscheduled" method="post"
@@ -99,6 +100,7 @@
                       <p style="color: red;">This feature doesn't work yet, but will soon!</p>
                     </form>
                   </div>
+                  -->
                 </div>
                 <div class="row col-xs-12">
                   <h3>Add new prelim</h3>
