@@ -20,7 +20,7 @@ def lp_assignment(fac_avail, student_rankings, slots, RANK = 5):
 	tuples = []
 
 	for stu in stus:		
-		for i in xrange(len(student_rankings[stu])):
+		for i in range(len(student_rankings[stu])):
 			for slot in slots:
 				tuples.append((lp_assmnts[student_rankings[stu][i]][stu][slot], slot_weights[slot] * rank_weights[i]))
 

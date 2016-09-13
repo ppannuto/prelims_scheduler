@@ -133,7 +133,7 @@ def render_event(event, uniqname=None, render_free=False, blackout_as_busy=False
         day_time = start_time
         while day_time < end_time:
             row_html = ''
-            for day in xrange(5):
+            for day in range(5):
                 cls = 'time_slot'
                 t = datetime.datetime.combine(monday+datetime.timedelta(days=day), day_time)
 
