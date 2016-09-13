@@ -8,7 +8,7 @@
   <div metal:fill-slot="content">
     <h1>Configure Event: ${name}</h1>
     <p>You can mark some times as bad for everyone (e.g. faculty meetings) in advance
-    on this page. You can always change these selections later.</p>
+    on this page.</p>
     <p>You can "paint" over time slots by clicking and dragging with the mouse.<p>
 
     <form role="form" id="event_form"
