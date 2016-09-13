@@ -40,6 +40,8 @@ def main(argv=sys.argv):
     Base.metadata.create_all(engine)
     for fac in open('prelims/scripts/fac_uniqs'):
         fac = fac.strip()
+        if len(fac) == 0 or fac[0] == '#':
+            continue
         try:
             DBSession.query(Faculty).filter_by(uniqname=fac).one()
         except NoResultFound:
